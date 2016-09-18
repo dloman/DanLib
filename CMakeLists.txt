@@ -23,6 +23,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(Threads)
 
+find_package(asio REQUIRED)
+
+include_directories(${asio_INCLUDE_DIR})
+
+include_directories(Tcp)
+
 include_directories(Utility)
 
 set(CMAKE_DEBUG_POSTFIX d)
@@ -38,7 +44,6 @@ target_link_libraries(
   )
 
 set_target_properties(Signal PROPERTIES LINKER_LANGUAGE CXX)
-
 add_executable(
   SignalTest
   Utility/Test/SignalTest.cpp
@@ -46,4 +51,27 @@ add_executable(
 target_link_libraries(
   SignalTest
   Signal
+  )
+
+add_library(
+  TcpServer
+  Tcp/Tcp/Server.cpp
+  Tcp/Tcp/Server.hpp
+  Tcp/Tcp/Session.cpp
+  Tcp/Tcp/Session.hpp
+  )
+
+target_link_libraries(
+  TcpServer
+  ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+add_executable(
+  Server
+  Tcp/Test/ServerTest.cpp
+  )
+
+target_link_libraries(
+  Server
+  TcpServer
   )
