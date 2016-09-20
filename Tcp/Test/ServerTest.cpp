@@ -12,6 +12,9 @@ int main()
   tcpServer.GetNewSessionSignal().Connect(
     [&Sessions] (auto pSession)
     {
+      pSession->GetOnRxSignal().Connect(
+        [] (const std::string& Bytes) {std::cout << Bytes << std::endl;});
+
       Sessions.push_back(pSession);
     });
 

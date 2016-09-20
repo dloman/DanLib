@@ -1,6 +1,10 @@
 #pragma once
 
+#include <Signal/Signal.hpp>
+
 #include <asio.hpp>
+
+#include <string>
 
 namespace dl::tcp
 {
@@ -16,6 +20,10 @@ namespace dl::tcp
 
       void Write(const std::string& Bytes);
 
+      const dl::Signal<const std::string&>& GetOnRxSignal() const;
+
+      const dl::Signal<void>& GetOnDisconnectSignal() const;
+
     private:
 
       void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
@@ -27,7 +35,27 @@ namespace dl::tcp
       enum { eMaxLength = 1024 };
 
       char mData[eMaxLength];
+
+      dl::Signal<const std::string&> mSignalOnRx;
+
+      dl::Signal<void> mSignalOnDisconnect;
   };
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+inline
+const dl::Signal<const std::string&>& dl::tcp::Session::GetOnRxSignal() const
+{
+  return mSignalOnRx;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+inline
+const dl::Signal<void>& dl::tcp::Session::GetOnDisconnectSignal() const
+{
+  return mSignalOnDisconnect;
 }
 
 //------------------------------------------------------------------------------

@@ -48,12 +48,24 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
 {
   if (!Error)
   {
-    std::cout << std::string(mData, BytesTransfered) << std::endl;
-  mSocket.async_read_some(
-    asio::buffer(mData, eMaxLength),
-    [this] (const asio::error_code& Error, const size_t BytesTransfered)
-    {
-      OnRead(Error, BytesTransfered);
-    });
+
+    mSignalOnRx(std::string(mData, BytesTransfered));
+
+    mSocket.async_read_some(
+      asio::buffer(mData, eMaxLength),
+      [this] (const asio::error_code& Error, const size_t BytesTransfered)
+      {
+        OnRead(Error, BytesTransfered);
+      });
+  }
+  else if (
+    (Error == asio::error::eof) || (Error == asio::error::connection_reset))
+  {
+    mSignalOnDisconnect();
+    std::cout << "disconnect" << std::endl;
+  }
+  else
+  {
+    std::cout << "nope" << std::endl;
   }
 }
