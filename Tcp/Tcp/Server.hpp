@@ -23,7 +23,7 @@ namespace dl::tcp
   {
     public:
 
-      Server(unsigned short Port);
+      Server(unsigned short Port, unsigned NumberOfThreads = 1);
 
       ~Server();
 
@@ -51,7 +51,7 @@ namespace dl::tcp
 
       asio::ip::tcp::acceptor mAcceptor;
 
-      std::thread mThread;
+      std::vector<std::thread> mThreads;
 
       NewSessionSignal mSignalNewSession;
   };

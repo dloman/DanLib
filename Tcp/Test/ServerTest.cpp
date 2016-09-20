@@ -6,10 +6,11 @@
 //------------------------------------------------------------------------------
 int main()
 {
-  dl::tcp::Server tcpServer(8080);
+  dl::tcp::Server TcpServer(8080, 4);
 
   std::vector<std::shared_ptr<dl::tcp::Session>> Sessions;
-  tcpServer.GetNewSessionSignal().Connect(
+
+  TcpServer.GetNewSessionSignal().Connect(
     [&Sessions] (auto pSession)
     {
       pSession->GetOnRxSignal().Connect(

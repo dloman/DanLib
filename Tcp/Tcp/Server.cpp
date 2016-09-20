@@ -15,16 +15,19 @@ using dl::tcp::Server;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Server::Server(unsigned short Port)
+Server::Server(unsigned short Port, unsigned NumberOfThreads)
   : mIoService(),
     mAcceptor(mIoService, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port)),
-    mThread()
+    mThreads()
 {
   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
 
   StartAccept();
 
-  mThread = std::thread([this] { mIoService.run(); });
+  for (unsigned i = 0u; i < NumberOfThreads; ++i)
+  {
+    mThreads.emplace_back([this] { mIoService.run(); });
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -33,7 +36,10 @@ Server::~Server()
 {
   mIoService.stop();
 
-  mThread.join();
+  for (auto& Thread : mThreads)
+  {
+    Thread.join();
+  }
 }
 
 //------------------------------------------------------------------------------
