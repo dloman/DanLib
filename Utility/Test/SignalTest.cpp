@@ -20,6 +20,12 @@ int main()
 
   String("fuck");
   String("yeah!!!");
+
+  dl::Signal<void> Null;
+
+  Null.Connect([] {std::cout << "Null Signaled" << std::endl;});
+  Null();
+  Null();
 }
 
 
