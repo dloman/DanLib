@@ -28,9 +28,13 @@ namespace dl::tcp
 
       void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
 
+      void AsyncWrite(const std::string& Bytes);
+
     private:
 
       asio::ip::tcp::socket mSocket;
+
+      asio::io_service::strand mStrand;
 
       enum { eMaxLength = 1024 };
 

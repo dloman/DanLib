@@ -7,7 +7,8 @@ using dl::tcp::Session;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 Session::Session(asio::io_service& IoService)
- : mSocket(IoService)
+ : mSocket(IoService),
+   mStrand(IoService)
 {
 }
 
@@ -25,22 +26,27 @@ void Session::Start()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Session::Write(const std::string& Bytes)
+void Session::AsyncWrite(const std::string& Bytes)
 {
   asio::async_write(
     mSocket,
     asio::buffer(mData, eMaxLength),
-    [this, &Bytes] (const asio::error_code& Error, const size_t BytesTransfered)
-    {
-      if (Error)
+    mStrand.wrap(
+      [this, &Bytes] (const asio::error_code& Error, const size_t BytesTransfered)
       {
-        Write(Bytes);
-      }
-    });
+        if (Error)
+        {
+          AsyncWrite(Bytes);
+        }
+      }));
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+void Session::Write(const std::string& Bytes)
+{
+  mStrand.post([this, Bytes] { AsyncWrite(Bytes); });
+}
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
