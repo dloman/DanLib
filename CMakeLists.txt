@@ -63,7 +63,7 @@ add_library(
 
 target_link_libraries(
   TcpServer
-  ${CMAKE_THREAD_LIBS_INIT}
+  Signal
   )
 
 add_executable(

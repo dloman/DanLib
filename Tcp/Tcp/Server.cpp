@@ -15,18 +15,36 @@ using dl::tcp::Server;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Server::Server(unsigned short Port, unsigned NumberOfThreads)
+Server::Server(
+  unsigned short Port,
+  unsigned NumberOfIoThreads,
+  unsigned NumberOfCallbackThreads)
   : mIoService(),
     mAcceptor(mIoService, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port)),
+    mCallbackService(),
+    mpNullWork(nullptr),
     mThreads()
 {
   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
 
   StartAccept();
 
+  StartWorkerThreads(mIoService, NumberOfIoThreads);
+
+  mpNullWork = std::make_shared<asio::io_service::work> (mCallbackService);
+
+  StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Server::StartWorkerThreads(
+  asio::io_service& IoService,
+  unsigned NumberOfThreads)
+{
   for (unsigned i = 0u; i < NumberOfThreads; ++i)
   {
-    mThreads.emplace_back([this] { mIoService.run(); });
+    mThreads.emplace_back([this, &IoService] { IoService.run(); });
   }
 }
 
@@ -35,6 +53,8 @@ Server::Server(unsigned short Port, unsigned NumberOfThreads)
 Server::~Server()
 {
   mIoService.stop();
+
+  mpNullWork.reset();
 
   for (auto& Thread : mThreads)
   {
@@ -46,7 +66,8 @@ Server::~Server()
 //------------------------------------------------------------------------------
 void Server::StartAccept()
 {
-  auto pSession = std::make_shared<dl::tcp::Session>(mIoService);
+  auto pSession =
+    std::make_shared<dl::tcp::Session>(mIoService, mCallbackService);
 
   mAcceptor.async_accept(
     pSession->GetSocket(),

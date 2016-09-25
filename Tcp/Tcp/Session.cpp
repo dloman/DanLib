@@ -6,9 +6,11 @@ using dl::tcp::Session;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Session::Session(asio::io_service& IoService)
- : mSocket(IoService),
-   mStrand(IoService)
+Session::Session(asio::io_service& IoService, asio::io_service& CallbackService)
+ : mIoService(IoService),
+   mCallbackService(CallbackService),
+   mSocket(mIoService),
+   mStrand(mIoService)
 {
 }
 
@@ -17,7 +19,7 @@ Session::Session(asio::io_service& IoService)
 void Session::Start()
 {
   mSocket.async_read_some(
-    asio::buffer(mData, eMaxLength),
+    asio::buffer(mData, mMaxLength),
     [this] (const asio::error_code& Error, const size_t BytesTransfered)
     {
       OnRead(Error, BytesTransfered);
@@ -26,26 +28,38 @@ void Session::Start()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Session::AsyncWrite(const std::string& Bytes)
+void Session::AsyncWrite()
 {
-  asio::async_write(
-    mSocket,
-    asio::buffer(mData, eMaxLength),
-    mStrand.wrap(
-      [this, &Bytes] (const asio::error_code& Error, const size_t BytesTransfered)
-      {
-        if (Error)
+  if (!mWriteQueue.empty())
+  {
+    auto Message = mWriteQueue.front();
+
+    mWriteQueue.pop_front();
+
+    asio::async_write(
+      mSocket,
+      asio::buffer(Message),
+      mStrand.wrap(
+        [this, &Message] (const asio::error_code& Error, const size_t BytesTransfered)
         {
-          AsyncWrite(Bytes);
-        }
-      }));
+          if (!Error)
+          {
+            AsyncWrite();
+          }
+          else
+          {
+            CallSignalOnThreadPool(mSignalWriteError, Error, Message);
+          }
+        }));
+  }
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void Session::Write(const std::string& Bytes)
 {
-  mStrand.post([this, Bytes] { AsyncWrite(Bytes); });
+  mIoService.post(mStrand.wrap(
+    [this, Bytes] { mWriteQueue.push_back(Bytes); AsyncWrite(); }));
 }
 
 //------------------------------------------------------------------------------
@@ -55,10 +69,10 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   if (!Error)
   {
 
-    mSignalOnRx(std::string(mData, BytesTransfered));
+    CallSignalOnThreadPool(mSignalOnRx, std::string(mData, BytesTransfered));
 
     mSocket.async_read_some(
-      asio::buffer(mData, eMaxLength),
+      asio::buffer(mData, mMaxLength),
       [this] (const asio::error_code& Error, const size_t BytesTransfered)
       {
         OnRead(Error, BytesTransfered);
@@ -67,11 +81,10 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   else if (
     (Error == asio::error::eof) || (Error == asio::error::connection_reset))
   {
-    mSignalOnDisconnect();
-    std::cout << "disconnect" << std::endl;
+    CallSignalOnThreadPool(mSignalOnDisconnect);
   }
   else
   {
-    std::cout << "nope" << std::endl;
+    CallSignalOnThreadPool(mSignalReadError, Error);
   }
 }

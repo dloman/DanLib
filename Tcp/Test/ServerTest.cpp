@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 int main()
 {
-  dl::tcp::Server TcpServer(8080, 4);
+  dl::tcp::Server TcpServer(8080, 2, 2);
 
   std::vector<std::shared_ptr<dl::tcp::Session>> Sessions;
 
@@ -14,7 +14,14 @@ int main()
     [&Sessions] (auto pSession)
     {
       pSession->GetOnRxSignal().Connect(
-        [] (const std::string& Bytes) {std::cout << Bytes << std::endl;});
+        [pSession] (const std::string& Bytes)
+        {
+          pSession->Write("Recived bytes = " + Bytes);
+          std::cout << Bytes << std::endl;
+        });
+
+      pSession->GetOnDisconnectSignal().Connect(
+        [] { std::cout << "Disconnect" << std::endl; });
 
       Sessions.push_back(pSession);
     });

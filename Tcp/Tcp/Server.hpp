@@ -23,7 +23,10 @@ namespace dl::tcp
   {
     public:
 
-      Server(unsigned short Port, unsigned NumberOfThreads = 1);
+      Server(
+        unsigned short Port,
+        unsigned NumberOfIoThreads = 1,
+        unsigned NumberOfCallbackThreads = 1);
 
       ~Server();
 
@@ -39,6 +42,10 @@ namespace dl::tcp
 
     private:
 
+      void StartWorkerThreads(
+        asio::io_service& IoService,
+        unsigned NumberOfThreads);
+
       void StartAccept();
 
       void OnAccept(
@@ -50,6 +57,10 @@ namespace dl::tcp
       asio::io_service mIoService;
 
       asio::ip::tcp::acceptor mAcceptor;
+
+      asio::io_service mCallbackService;
+
+      std::shared_ptr<asio::io_service::work> mpNullWork;
 
       std::vector<std::thread> mThreads;
 

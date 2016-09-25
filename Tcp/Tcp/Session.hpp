@@ -4,7 +4,9 @@
 
 #include <asio.hpp>
 
+#include <deque>
 #include <string>
+#include <iostream>
 
 namespace dl::tcp
 {
@@ -12,7 +14,7 @@ namespace dl::tcp
   {
     public:
 
-      Session(asio::io_service& Service);
+      Session(asio::io_service& IoService, asio::io_service& CallbackService);
 
       void Start();
 
@@ -20,36 +22,53 @@ namespace dl::tcp
 
       void Write(const std::string& Bytes);
 
-      const dl::Signal<const std::string&>& GetOnRxSignal() const;
+      const dl::Signal<const std::string>& GetOnRxSignal() const;
 
       const dl::Signal<void>& GetOnDisconnectSignal() const;
+
+      const dl::Signal<const asio::error_code>& GetSignalReadError() const;
+
+      const dl::Signal<const asio::error_code, const std::string>& GetSignalWriteError() const;
 
     private:
 
       void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
 
-      void AsyncWrite(const std::string& Bytes);
+      void AsyncWrite();
+
+      template <typename ... T, typename ... ArgsType>
+      void CallSignalOnThreadPool(dl::Signal<T...>& Signal, ArgsType&& ... Args);
 
     private:
+
+      asio::io_service& mIoService;
+
+      asio::io_service& mCallbackService;
 
       asio::ip::tcp::socket mSocket;
 
       asio::io_service::strand mStrand;
 
-      enum { eMaxLength = 1024 };
+      std::deque<std::string> mWriteQueue;
 
-      char mData[eMaxLength];
+      static constexpr unsigned mMaxLength = 1024;
 
-      dl::Signal<const std::string&> mSignalOnRx;
+      char mData[mMaxLength];
+
+      dl::Signal<const std::string> mSignalOnRx;
 
       dl::Signal<void> mSignalOnDisconnect;
+
+      dl::Signal<const asio::error_code> mSignalReadError;
+
+      dl::Signal<const asio::error_code, const std::string> mSignalWriteError;
   };
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const std::string&>& dl::tcp::Session::GetOnRxSignal() const
+const dl::Signal<const std::string>& dl::tcp::Session::GetOnRxSignal() const
 {
   return mSignalOnRx;
 }
@@ -65,9 +84,35 @@ const dl::Signal<void>& dl::tcp::Session::GetOnDisconnectSignal() const
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
+const dl::Signal<const asio::error_code>& dl::tcp::Session::GetSignalReadError() const
+{
+  return mSignalReadError;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+inline
+const dl::Signal<const asio::error_code, const std::string>&
+  dl::tcp::Session::GetSignalWriteError() const
+{
+  return mSignalWriteError;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+inline
 asio::ip::tcp::socket& dl::tcp::Session::GetSocket()
 {
   return mSocket;
 }
 
-
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+template <typename ... T, typename ... ArgsType>
+void dl::tcp::Session::CallSignalOnThreadPool(
+  dl::Signal<T...>& Signal,
+  ArgsType&& ... Args)
+{
+  mCallbackService.post(
+    [&Signal, &Args...] { Signal(std::forward<ArgsType>(Args)...); });
+}
