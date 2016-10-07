@@ -23,6 +23,8 @@ Server::Server(
     mAcceptor(mIoService, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port)),
     mCallbackService(),
     mpNullWork(nullptr),
+    mpNewSession(nullptr),
+    mActiveSessions(),
     mThreads()
 {
   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
@@ -66,30 +68,47 @@ Server::~Server()
 //------------------------------------------------------------------------------
 void Server::StartAccept()
 {
-  auto pSession =
+  mpNewSession =
     std::make_shared<dl::tcp::Session>(mIoService, mCallbackService);
 
   mAcceptor.async_accept(
-    pSession->GetSocket(),
-    [this, pSession] (asio::error_code Error)
+    mpNewSession->GetSocket(),
+    [this] (asio::error_code Error)
     {
-      OnAccept(pSession, Error);
+      OnAccept(Error);
     });
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Server::OnAccept(std::shared_ptr<dl::tcp::Session> pSession, asio::error_code& Error)
+void Server::OnAccept(asio::error_code& Error)
 {
   if (!Error)
   {
-    std::cout << "ACCEPT!" << std::endl;
-    pSession->Start();
-    mSignalNewSession(pSession);
+    mpNewSession->Start();
+    mActiveSessions.push_back(mpNewSession);
+
+    mpNewSession->GetOnDisconnectSignal().Connect(
+      [this] (const unsigned long SessionId)
+      {
+        mActiveSessions.erase(
+          std::remove_if(
+            mActiveSessions.begin(),
+            mActiveSessions.end(),
+            [&SessionId] (std::shared_ptr<dl::tcp::Session> pSession)
+            {
+              return pSession->GetSessionId() == SessionId;
+            }),
+          mActiveSessions.end());
+      });
+
+    mSignalNewSession(mpNewSession);
   }
   else
   {
-    std::cerr << "ERROR" << std::endl;
+    std::cerr
+      << "ERROR: Error Accepting Session Line:"
+      << __LINE__ << " File: " << __FILE__  << std::endl;
   }
 
   StartAccept();

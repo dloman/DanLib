@@ -16,6 +16,12 @@ namespace dl::tcp
 
       Session(asio::io_service& IoService, asio::io_service& CallbackService);
 
+      ~Session() = default;
+
+      Session(const Session& Other) = delete;
+
+      Session& operator = (const Session& Rhs) = delete;
+
       void Start();
 
       asio::ip::tcp::socket& GetSocket();
@@ -24,11 +30,13 @@ namespace dl::tcp
 
       const dl::Signal<const std::string>& GetOnRxSignal() const;
 
-      const dl::Signal<void>& GetOnDisconnectSignal() const;
+      const dl::Signal<const unsigned long>& GetOnDisconnectSignal() const;
 
       const dl::Signal<const asio::error_code>& GetSignalReadError() const;
 
       const dl::Signal<const asio::error_code, const std::string>& GetSignalWriteError() const;
+
+      const unsigned long& GetSessionId() const;
 
     private:
 
@@ -40,6 +48,10 @@ namespace dl::tcp
       void CallSignalOnThreadPool(dl::Signal<T...>& Signal, ArgsType&& ... Args);
 
     private:
+
+      static std::atomic<unsigned long> mCount;
+
+      const unsigned long mSessionId;
 
       asio::io_service& mIoService;
 
@@ -57,7 +69,7 @@ namespace dl::tcp
 
       dl::Signal<const std::string> mSignalOnRx;
 
-      dl::Signal<void> mSignalOnDisconnect;
+      dl::Signal<const unsigned long> mSignalOnDisconnect;
 
       dl::Signal<const asio::error_code> mSignalReadError;
 
@@ -76,7 +88,7 @@ const dl::Signal<const std::string>& dl::tcp::Session::GetOnRxSignal() const
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<void>& dl::tcp::Session::GetOnDisconnectSignal() const
+const dl::Signal<const unsigned long>& dl::tcp::Session::GetOnDisconnectSignal() const
 {
   return mSignalOnDisconnect;
 }
@@ -115,4 +127,12 @@ void dl::tcp::Session::CallSignalOnThreadPool(
 {
   mCallbackService.post(
     [&Signal, &Args...] { Signal(std::forward<ArgsType>(Args)...); });
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+inline
+const unsigned long& dl::tcp::Session::GetSessionId() const
+{
+  return mSessionId;
 }

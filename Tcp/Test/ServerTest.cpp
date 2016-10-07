@@ -2,34 +2,47 @@
 #include <Tcp/Server.hpp>
 #include <iostream>
 
+using namespace std;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 int main()
 {
   dl::tcp::Server TcpServer(8080, 2, 2);
 
-  std::vector<std::shared_ptr<dl::tcp::Session>> Sessions;
+  cout << "Server Listening on 8080" << endl;
 
   TcpServer.GetNewSessionSignal().Connect(
-    [&Sessions] (auto pSession)
+    [] (std::weak_ptr<dl::tcp::Session> pWeakSession)
     {
-      pSession->GetOnRxSignal().Connect(
-        [pSession] (const std::string& Bytes)
-        {
-          pSession->Write("Recived bytes = " + Bytes);
-          std::cout << Bytes << std::endl;
-        });
+      auto pSession = pWeakSession.lock();
+      if (pSession)
+      {
+        pSession->GetOnRxSignal().Connect(
+          [pWeakSession]
+          (const std::string& Bytes)
+          {
+            std::shared_ptr<dl::tcp::Session> pSession = pWeakSession.lock();
 
-      pSession->GetOnDisconnectSignal().Connect(
-        [] { std::cout << "Disconnect" << std::endl; });
+            if (pSession)
+            {
+              pSession->Write("Recived bytes = " + Bytes);
+              std::cout << Bytes << std::endl;
+            }
 
-      Sessions.push_back(pSession);
+          });
+
+        pSession->GetOnDisconnectSignal().Connect(
+          [] (const unsigned SessionId)
+          {
+            cout << "Session Id " << SessionId << " Disconnected" << endl;
+          });
+
+      }
     });
-
-  std::cout << "yo " << std::endl;
 
   while (true)
   {
+    this_thread::sleep_for(chrono::seconds(4));
   }
   return 0;
 }

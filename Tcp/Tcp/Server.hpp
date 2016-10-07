@@ -40,6 +40,8 @@ namespace dl::tcp
 
       const NewSessionSignal& GetNewSessionSignal() const;
 
+      const size_t GetConnectionCount() const;
+
     private:
 
       void StartWorkerThreads(
@@ -48,9 +50,7 @@ namespace dl::tcp
 
       void StartAccept();
 
-      void OnAccept(
-        std::shared_ptr<dl::tcp::Session> pSession,
-        asio::error_code& Error);
+      void OnAccept(asio::error_code& Error);
 
     private:
 
@@ -61,6 +61,10 @@ namespace dl::tcp
       asio::io_service mCallbackService;
 
       std::shared_ptr<asio::io_service::work> mpNullWork;
+
+      std::shared_ptr<dl::tcp::Session> mpNewSession;
+
+      std::vector<std::shared_ptr<dl::tcp::Session>> mActiveSessions;
 
       std::vector<std::thread> mThreads;
 
@@ -74,5 +78,12 @@ namespace dl::tcp
   {
     return mSignalNewSession;
   }
-}
 
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const size_t Server::GetConnectionCount() const
+  {
+    return mActiveSessions.size();
+  }
+}

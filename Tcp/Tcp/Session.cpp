@@ -4,10 +4,13 @@
 
 using dl::tcp::Session;
 
+std::atomic<unsigned long> Session::mCount(0ul);
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 Session::Session(asio::io_service& IoService, asio::io_service& CallbackService)
- : mIoService(IoService),
+ : mSessionId(++mCount),
+   mIoService(IoService),
    mCallbackService(CallbackService),
    mSocket(mIoService),
    mStrand(mIoService)
@@ -81,7 +84,7 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   else if (
     (Error == asio::error::eof) || (Error == asio::error::connection_reset))
   {
-    CallSignalOnThreadPool(mSignalOnDisconnect);
+    CallSignalOnThreadPool(mSignalOnDisconnect, mSessionId);
   }
   else
   {
