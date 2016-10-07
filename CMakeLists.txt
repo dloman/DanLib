@@ -9,6 +9,9 @@ ADD_DEFINITIONS(-fPIC)
 
 set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 
+SET(DanLib_VERSION_MAJOR 0)
+SET(DanLib_VERSION_MINOR 1)
+
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++1z" COMPILER_SUPPORTS_CXX17)
 if(COMPILER_SUPPORTS_CXX17)
@@ -74,4 +77,78 @@ add_executable(
 target_link_libraries(
   Server
   TcpServer
+  )
+
+#------------------------------------------------------------------------------
+# Install
+#------------------------------------------------------------------------------
+set(DanLib_VERSION_STRING "${DanLib_VERSION_MAJOR}.${DanLib_VERSION_MINOR}")
+set(DanLib_DIRNAME        "DanLib-${DanLib_VERSION_STRING}")
+
+if (MSVC AND CMAKE_CL_64)
+  set(DanLib_DIRNAME_lib "lib/${DanLib_DIRNAME}/x64")
+elseif (MSVC)
+  set(DanLib_DIRNAME_lib "lib/${DanLib_DIRNAME}/x86")
+else ()
+  set(DanLib_DIRNAME_lib "lib/${DanLib_DIRNAME}")
+endif ()
+
+set(DanLib_DIRNAME_include "include/${DanLib_DIRNAME}")
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/DanLibConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/DanLibConfig.cmake"
+  INSTALL_DESTINATION
+    ${DanLib_DIRNAME_lib}
+  PATH_VARS
+    DanLib_DIRNAME_lib
+    DanLib_DIRNAME_include
+  )
+
+WRITE_BASIC_PACKAGE_VERSION_FILE(
+  "${CMAKE_CURRENT_BINARY_DIR}/DanLibConfigVersion.cmake"
+  VERSION ${DanLib_VERSION_STRING}
+  COMPATIBILITY AnyNewerVersion
+  )
+
+install(
+TARGETS
+  TcpServer
+  Signal
+DESTINATION
+  ${DanLib_DIRNAME_lib}
+EXPORT
+  DanLibExports
+  )
+
+install(
+  EXPORT
+    DanLibExports
+  DESTINATION
+    ${DanLib_DIRNAME_lib}
+  )
+
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/DanLibConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/DanLibConfigVersion.cmake
+  DESTINATION
+    ${DanLib_DIRNAME_lib}
+  )
+
+install(
+  FILES
+    Utility/Signal/Signal.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/Signal
+  )
+
+install(
+  FILES
+    Tcp/Tcp/Server.hpp
+    Tcp/Tcp/Session.hpp
+  DESTINATION
+  ${DanLib_DIRNAME_include}/Tcp
   )

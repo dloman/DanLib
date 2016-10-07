@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+SET_AND_CHECK(DanLib_INCLUDE_DIR @PACKAGE_DanLib_DIRNAME_include@ )
+
+IF(NOT TARGET DanLib)
+  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/DanLibExports.cmake)
+ENDIF()
+
+SET(DanLib_INCLUDE_DIRS ${DanLib_INCLUDE_DIR} )
+
+SET(
+  DanLib_LIBRARIES
+  TcpServer
+  Signal)
