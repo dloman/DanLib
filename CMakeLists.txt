@@ -57,7 +57,9 @@ target_link_libraries(
   )
 
 add_library(
-  TcpServer
+  Tcp
+  Tcp/Tcp/Client.cpp
+  Tcp/Tcp/Client.hpp
   Tcp/Tcp/Server.cpp
   Tcp/Tcp/Server.hpp
   Tcp/Tcp/Session.cpp
@@ -65,7 +67,7 @@ add_library(
   )
 
 target_link_libraries(
-  TcpServer
+  Tcp
   Signal
   )
 
@@ -76,7 +78,22 @@ add_executable(
 
 target_link_libraries(
   Server
-  TcpServer
+  Tcp
+  )
+
+target_link_libraries(
+  Tcp
+  Signal
+  )
+
+add_executable(
+  Client
+  Tcp/Test/ClientTest.cpp
+  )
+
+target_link_libraries(
+  Client
+  Tcp
   )
 
 #------------------------------------------------------------------------------
@@ -115,7 +132,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 
 install(
 TARGETS
-  TcpServer
+  Tcp
   Signal
 DESTINATION
   ${DanLib_DIRNAME_lib}

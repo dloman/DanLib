@@ -9,7 +9,6 @@
 //------------------------------------------------------------------------------
 
 #include "Server.hpp"
-#include <iostream>
 
 using dl::tcp::Server;
 
