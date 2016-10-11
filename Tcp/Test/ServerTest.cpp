@@ -15,6 +15,7 @@ int main()
     [] (std::weak_ptr<dl::tcp::Session> pWeakSession)
     {
       auto pSession = pWeakSession.lock();
+      cout << "Connect!!!! " << endl;
       if (pSession)
       {
         pSession->GetOnRxSignal().Connect(

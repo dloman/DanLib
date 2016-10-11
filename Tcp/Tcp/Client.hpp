@@ -50,6 +50,12 @@ namespace dl::tcp
 
       void Entry();
 
+      void Connect(const asio::ip::tcp::socket::endpoint_type& Endpoint);
+
+      void OnConnect(const asio::error_code& Error);
+
+      asio::ip::tcp::resolver::iterator GetEndpoint() const;
+
     private:
 
       asio::io_service mIoService;
@@ -58,7 +64,9 @@ namespace dl::tcp
 
       std::experimental::optional<dl::tcp::Session> mSession;
 
-      asio::ip::tcp::endpoint mEndpoint;
+      std::string mHostname;
+
+      unsigned mPort;
 
       std::recursive_mutex mMutex;
 
@@ -69,6 +77,8 @@ namespace dl::tcp
       std::atomic<bool> mConnected;
 
       std::shared_ptr<asio::io_service::work> mpNullWork;
+
+      dl::Signal<const std::string&> mSignalConnectionError;
 
   };
 }

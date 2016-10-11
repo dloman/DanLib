@@ -24,7 +24,8 @@ Server::Server(
     mpNullWork(nullptr),
     mpNewSession(nullptr),
     mActiveSessions(),
-    mThreads()
+    mThreads(),
+    mMutex()
 {
   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
 
@@ -85,11 +86,16 @@ void Server::OnAccept(asio::error_code& Error)
   if (!Error)
   {
     mpNewSession->Start();
-    mActiveSessions.push_back(mpNewSession);
+    {
+      std::lock_guard<std::mutex> Lock(mMutex);
+      mActiveSessions.push_back(mpNewSession);
+    }
 
     mpNewSession->GetOnDisconnectSignal().Connect(
       [this] (const unsigned long SessionId)
       {
+        std::lock_guard<std::mutex> Lock(mMutex);
+
         mActiveSessions.erase(
           std::remove_if(
             mActiveSessions.begin(),
@@ -112,3 +118,16 @@ void Server::OnAccept(asio::error_code& Error)
 
   StartAccept();
 }
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Server::Write(const std::string& Bytes)
+{
+  std::lock_guard<std::mutex> Lock(mMutex);
+
+  for (const auto pSession : mActiveSessions)
+  {
+    pSession->Write(Bytes);
+  }
+}
+

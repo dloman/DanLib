@@ -42,6 +42,8 @@ namespace dl::tcp
 
       const size_t GetConnectionCount() const;
 
+      void Write(const std::string& Bytes);
+
     private:
 
       void StartWorkerThreads(
@@ -69,6 +71,8 @@ namespace dl::tcp
       std::vector<std::thread> mThreads;
 
       NewSessionSignal mSignalNewSession;
+
+      std::mutex mMutex;
   };
 
   //----------------------------------------------------------------------------
