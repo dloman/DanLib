@@ -64,16 +64,13 @@ void Client::Connect()
   mSession.emplace(mIoService, mCallbackService);
 
   mSession->GetOnRxSignal().Connect(
-    [] (const std::string Bytes)
+    [this] (const std::string Bytes)
     {
-      std::cout << "Recived: " << Bytes << std::endl;
+      mSignalOnRx(Bytes);
     });
 
   mSession->GetOnDisconnectSignal().Connect(
-    [this] (const unsigned long SessionId)
-    {
-      mSession = std::experimental::nullopt;
-    });
+    [this] { mSession = std::experimental::nullopt; });
 
   if (!mConnected)
   {
@@ -88,8 +85,6 @@ void Client::Connect()
       });
 
     StartWorkerThreads(mIoService, 1);
-
-    mConnected = true;
   }
 }
 
@@ -114,10 +109,13 @@ void Client::OnResolve(
 {
   if (!Error)
   {
-    socket_.async_connect(iEndpoint,
-      [this] (asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+    asio::async_connect(
+      mSession->GetSocket(),
+      iEndpoint,
+      [this]
+      (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
       {
-        OnConnect(Error, ++iEndpoint);
+        OnConnect(Error, iEndpoint);
       });
   }
   else
@@ -134,13 +132,16 @@ void Client::OnConnect(
 {
   if (!Error)
   {
-    std::cout << "CONNECTION !!!!!" << std::endl;
     mSession->Start();
+
+    mConnected = true;
   }
   else if (iEndpoint != asio::ip::tcp::resolver::iterator())
   {
-    socket_.async_connect(iEndpoint,
-      [this] (asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+    asio::async_connect(
+      mSession->GetSocket(),
+      iEndpoint,
+      [this] (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
       {
         OnConnect(Error, ++iEndpoint);
       });

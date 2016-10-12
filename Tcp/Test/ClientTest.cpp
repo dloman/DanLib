@@ -15,11 +15,9 @@ int main()
 
   while (true)
   {
-    this_thread::sleep_for(chrono::seconds(4));
     TcpClient.Write("foo");
     cout << "writing stuff" << endl;
+    this_thread::sleep_for(chrono::seconds(4));
   }
   return 0;
 }
-
-

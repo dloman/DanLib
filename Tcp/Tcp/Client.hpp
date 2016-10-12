@@ -58,10 +58,6 @@ namespace dl::tcp
         const asio::error_code& Error,
         asio::ip::tcp::resolver::iterator iEndpoint);
 
-      void OnConnect(const asio::error_code& Error);
-
-      asio::ip::tcp::resolver::iterator GetEndpoint() const;
-
     private:
 
       asio::io_service mIoService;
@@ -87,6 +83,8 @@ namespace dl::tcp
       std::shared_ptr<asio::io_service::work> mpNullWork;
 
       dl::Signal<const std::string&> mSignalConnectionError;
+
+      dl::Signal<const std::string&> mSignalOnRx;
 
   };
 }
