@@ -50,7 +50,13 @@ namespace dl::tcp
 
       void Entry();
 
-      void Connect(const asio::ip::tcp::socket::endpoint_type& Endpoint);
+      void OnResolve(
+        const asio::error_code& Error,
+        asio::ip::tcp::resolver::iterator iEndpoint);
+
+      void OnConnect(
+        const asio::error_code& Error,
+        asio::ip::tcp::resolver::iterator iEndpoint);
 
       void OnConnect(const asio::error_code& Error);
 
@@ -61,6 +67,8 @@ namespace dl::tcp
       asio::io_service mIoService;
 
       asio::io_service mCallbackService;
+
+      asio::ip::tcp::resolver mResolver;
 
       std::experimental::optional<dl::tcp::Session> mSession;
 

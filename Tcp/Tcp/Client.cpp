@@ -14,6 +14,7 @@ Client::Client()
 Client::Client(const std::string& Hostname, const unsigned Port)
 : mIoService(),
   mCallbackService(),
+  mResolver(mIoService),
   mSession(),
   mHostname(Hostname),
   mPort(Port),
@@ -76,32 +77,19 @@ void Client::Connect()
 
   if (!mConnected)
   {
-    try
-    {
-      for (
-        auto iEndpoint = GetEndpoint();
-        iEndpoint != asio::ip::tcp::resolver::iterator();
-        ++iEndpoint)
+    asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
+
+    mResolver.async_resolve(
+      Query,
+      [this]
+      (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
       {
-        try
-        {
-          return Connect(*iEndpoint);
-        }
-        catch (const std::exception& Exception)
-        {
-          mSignalConnectionError(Exception.what());
-        }
-      }
+        OnResolve(Error, iEndpoint);
+      });
 
-      StartWorkerThreads(mIoService, 1);
+    StartWorkerThreads(mIoService, 1);
 
-      mConnected = true;
-
-    }
-    catch (const std::exception& Exception)
-    {
-      mSignalConnectionError(Exception.what());
-    }
+    mConnected = true;
   }
 }
 
@@ -120,31 +108,46 @@ void Client::Connect(const std::string& Hostname, const unsigned Port)
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Client::Connect(const asio::ip::tcp::socket::endpoint_type& Endpoint)
+void Client::OnResolve(
+  const asio::error_code& Error,
+  asio::ip::tcp::resolver::iterator iEndpoint)
 {
-  asio::deadline_timer Timer(mIoService);
-
-  //Timer.expires_from_now(std::chrono::seconds(5));
-
-  mSession->GetSocket().async_connect(
-    Endpoint,
-    [this] (const asio::error_code& Error) { std::cout << "ya" << std::endl; OnConnect(Error); });
-
+  if (!Error)
+  {
+    socket_.async_connect(iEndpoint,
+      [this] (asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+      {
+        OnConnect(Error, ++iEndpoint);
+      });
+  }
+  else
+  {
+    mSignalConnectionError(Error.message());
+  }
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Client::OnConnect(const asio::error_code& Error)
+void Client::OnConnect(
+  const asio::error_code& Error,
+  asio::ip::tcp::resolver::iterator iEndpoint)
 {
-  std::cerr << "onconnect: " << Error << std::endl;
-  if (Error)
+  if (!Error)
   {
-    std::cerr << "ERROR: " << Error << std::endl;
+    std::cout << "CONNECTION !!!!!" << std::endl;
+    mSession->Start();
+  }
+  else if (iEndpoint != asio::ip::tcp::resolver::iterator())
+  {
+    socket_.async_connect(iEndpoint,
+      [this] (asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+      {
+        OnConnect(Error, ++iEndpoint);
+      });
   }
   else
   {
-    mSession->Start();
-    std::cerr << "starting: " << Error << std::endl;
+    mSignalConnectionError(Error.message());
   }
 }
 
@@ -156,23 +159,4 @@ void Client::Write(const std::string& Bytes)
   {
     mSession->Write(Bytes);
   }
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-asio::ip::tcp::resolver::iterator Client::GetEndpoint() const
-{
-  asio::io_service IoService;
-
-  asio::ip::tcp::resolver Resolver(IoService);
-
-  asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
-
-  auto iResolver = Resolver.resolve(Query);
-
-  if (iResolver == asio::ip::tcp::resolver::iterator())
-  {
-    throw std::runtime_error("Cannot resolve hostname.");
-  }
-  return iResolver;
 }
