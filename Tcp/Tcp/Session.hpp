@@ -30,7 +30,7 @@ namespace dl::tcp
 
       const dl::Signal<const std::string>& GetOnRxSignal() const;
 
-      const dl::Signal<const unsigned long>& GetOnDisconnectSignal() const;
+      const dl::Signal<void>& GetOnDisconnectSignal() const;
 
       const dl::Signal<const asio::error_code>& GetSignalReadError() const;
 
@@ -69,7 +69,7 @@ namespace dl::tcp
 
       dl::Signal<const std::string> mSignalOnRx;
 
-      dl::Signal<const unsigned long> mSignalOnDisconnect;
+      dl::Signal<void> mSignalOnDisconnect;
 
       dl::Signal<const asio::error_code> mSignalReadError;
 
@@ -88,7 +88,7 @@ const dl::Signal<const std::string>& dl::tcp::Session::GetOnRxSignal() const
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const unsigned long>& dl::tcp::Session::GetOnDisconnectSignal() const
+const dl::Signal<void>& dl::tcp::Session::GetOnDisconnectSignal() const
 {
   return mSignalOnDisconnect;
 }

@@ -15,7 +15,7 @@ int main()
     [] (std::weak_ptr<dl::tcp::Session> pWeakSession)
     {
       auto pSession = pWeakSession.lock();
-      cout << "Connect!!!! " << endl;
+      cout << "Connect!!!! " << pSession->GetSessionId() << endl;
       if (pSession)
       {
         pSession->GetOnRxSignal().Connect(
@@ -26,16 +26,26 @@ int main()
 
             if (pSession)
             {
-              pSession->Write("Recived bytes = " + Bytes);
-              std::cout << Bytes << std::endl;
+              try
+              {
+                pSession->Write("Recived bytes = " + Bytes);
+                std::cout << Bytes << std::endl;
+              }
+              catch(std::exception& Exception)
+              {
+                std::cerr << "ERROR: " << Exception.what();
+              }
             }
 
           });
 
+        auto SessionId = pSession->GetSessionId();
         pSession->GetOnDisconnectSignal().Connect(
-          [] (const unsigned SessionId)
+          [SessionId] ()
           {
-            cout << "Session Id " << SessionId << " Disconnected" << endl;
+            cout
+              << "Session Id " << SessionId
+              << " Disconnected" << endl;
           });
 
       }

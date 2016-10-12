@@ -86,13 +86,16 @@ void Server::OnAccept(asio::error_code& Error)
   if (!Error)
   {
     mpNewSession->Start();
+
     {
       std::lock_guard<std::mutex> Lock(mMutex);
       mActiveSessions.push_back(mpNewSession);
     }
 
+    auto SessionId = mpNewSession->GetSessionId();
+
     mpNewSession->GetOnDisconnectSignal().Connect(
-      [this] (const unsigned long SessionId)
+      [this, SessionId]
       {
         std::lock_guard<std::mutex> Lock(mMutex);
 
@@ -100,7 +103,7 @@ void Server::OnAccept(asio::error_code& Error)
           std::remove_if(
             mActiveSessions.begin(),
             mActiveSessions.end(),
-            [&SessionId] (std::shared_ptr<dl::tcp::Session> pSession)
+            [SessionId] (std::shared_ptr<dl::tcp::Session> pSession)
             {
               return pSession->GetSessionId() == SessionId;
             }),
