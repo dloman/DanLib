@@ -18,24 +18,30 @@ Client::Client(const std::string& Hostname, const unsigned Port)
   mSession(),
   mHostname(Hostname),
   mPort(Port),
-  mMutex(),
+  mConnectionMutex(),
   mThreads(),
-  mIsRunning(false),
-  mConnected(false),
-  mpNullWork(nullptr)
+  mIsRunning(true),
+  mpNullIoWork(std::make_unique<asio::io_service::work> (mIoService)),
+  mpNullCallbackWork(std::make_unique<asio::io_service::work> (mCallbackService))
 {
-  mpNullWork = std::make_shared<asio::io_service::work> (mCallbackService);
-
   StartWorkerThreads(mCallbackService, 1);
+
+  Connect();
+
+  StartWorkerThreads(mIoService, 1);
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 Client::~Client()
 {
+  mIsRunning = false;
+
   mIoService.stop();
 
-  mpNullWork.reset();
+  mpNullIoWork.reset();
+
+  mpNullCallbackWork.reset();
 
   for (auto& Thread : mThreads)
   {
@@ -45,22 +51,19 @@ Client::~Client()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Client::StartWorkerThreads(
+void dl::tcp::Client::StartWorkerThreads(
   asio::io_service& IoService,
   unsigned NumberOfThreads)
 {
   for (unsigned i = 0u; i < NumberOfThreads; ++i)
   {
-    mThreads.emplace_back([this, &IoService] { IoService.run(); });
+    mThreads.emplace_back([&IoService] { IoService.run(); });
   }
 }
-
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void Client::Connect()
 {
-  std::lock_guard<std::recursive_mutex> Lock(mMutex);
-
   mSession.emplace(mIoService, mCallbackService);
 
   mSession->GetOnRxSignal().Connect(
@@ -70,35 +73,21 @@ void Client::Connect()
     });
 
   mSession->GetOnDisconnectSignal().Connect(
-    [this] { mSession = std::experimental::nullopt; });
+    [this]
+    {
+      std::cout << "disconnect" << std::endl;
+      Connect();
+    });
 
-  if (!mConnected)
-  {
-    asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
+  asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
 
-    mResolver.async_resolve(
-      Query,
-      [this]
-      (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
-      {
-        OnResolve(Error, iEndpoint);
-      });
-
-    StartWorkerThreads(mIoService, 1);
-  }
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void Client::Connect(const std::string& Hostname, const unsigned Port)
-{
-  std::lock_guard<std::recursive_mutex> Lock(mMutex);
-
-  mHostname = Hostname;
-
-  mPort = Port;
-
-  Connect();
+  mResolver.async_resolve(
+    Query,
+    [this]
+    (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+    {
+      OnResolve(Error, iEndpoint);
+    });
 }
 
 //------------------------------------------------------------------------------
@@ -133,8 +122,6 @@ void Client::OnConnect(
   if (!Error)
   {
     mSession->Start();
-
-    mConnected = true;
   }
   else if (iEndpoint != asio::ip::tcp::resolver::iterator())
   {

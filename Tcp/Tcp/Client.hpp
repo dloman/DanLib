@@ -36,13 +36,11 @@ namespace dl::tcp
 
       Client& operator = (const Client& Rhs) = delete;
 
-      void Connect();
-
-      void Connect(const std::string& Hostname, const unsigned Port);
-
       void Write(const std::string& Bytes);
 
     private:
+
+      void Connect();
 
       void StartWorkerThreads(
         asio::io_service& IoService,
@@ -72,15 +70,17 @@ namespace dl::tcp
 
       unsigned mPort;
 
-      std::recursive_mutex mMutex;
+      std::mutex mConnectionMutex;
 
       std::vector<std::thread> mThreads;
 
       std::atomic<bool> mIsRunning;
 
-      std::atomic<bool> mConnected;
+      std::atomic<bool> mIsConnecting;
 
-      std::shared_ptr<asio::io_service::work> mpNullWork;
+      std::unique_ptr<asio::io_service::work> mpNullIoWork;
+
+      std::unique_ptr<asio::io_service::work> mpNullCallbackWork;
 
       dl::Signal<const std::string&> mSignalConnectionError;
 

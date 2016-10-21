@@ -41,7 +41,7 @@ int main()
 
         auto SessionId = pSession->GetSessionId();
         pSession->GetOnDisconnectSignal().Connect(
-          [SessionId] ()
+          [SessionId]
           {
             cout
               << "Session Id " << SessionId
@@ -53,7 +53,8 @@ int main()
 
   while (true)
   {
-    this_thread::sleep_for(chrono::seconds(4));
+    TcpServer.Write("bar");
+    this_thread::sleep_for(chrono::milliseconds(10));
   }
   return 0;
 }

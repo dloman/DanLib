@@ -7,17 +7,15 @@ using namespace std;
 //------------------------------------------------------------------------------
 int main()
 {
-  dl::tcp::Client TcpClient;
-
   cout << "Client connecting on localhost 8080" << endl;
 
-  TcpClient.Connect();
+  dl::tcp::Client TcpClient;
 
   while (true)
   {
     TcpClient.Write("foo");
-    cout << "writing stuff" << endl;
-    this_thread::sleep_for(chrono::seconds(4));
+    //cout << "writing stuff" << endl;
+    this_thread::sleep_for(chrono::milliseconds(1200));
   }
   return 0;
 }
