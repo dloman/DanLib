@@ -14,7 +14,6 @@ int main()
   while (true)
   {
     TcpClient.Write("foo");
-    //cout << "writing stuff" << endl;
     this_thread::sleep_for(chrono::milliseconds(1200));
   }
   return 0;

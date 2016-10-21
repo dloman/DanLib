@@ -48,7 +48,7 @@ namespace dl
 
     for(auto& Slot : mSlots)
     {
-      Slot(std::forward<ArgsType> (Args)...);
+      Slot(Args...);
     }
   }
 

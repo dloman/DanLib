@@ -72,7 +72,7 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   if (!Error)
   {
     std::string Bytes(mData, BytesTransfered);
-    CallSignalOnThreadPool(mSignalOnRx, Bytes);
+    CallSignalOnThreadPool(mSignalOnRx, std::move(Bytes));
 
     mSocket.async_read_some(
       asio::buffer(mData, mMaxLength),
