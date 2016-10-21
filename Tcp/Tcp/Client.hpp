@@ -14,6 +14,7 @@
 
 #include <asio/io_service.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/basic_waitable_timer.hpp>
 
 //#include <optional>
 #include <experimental/optional>
@@ -26,9 +27,11 @@ namespace dl::tcp
   {
     public:
 
-      Client();
-
-      Client(const std::string& Hostname, const unsigned Port);
+      Client(
+        const std::string& Hostname = "localhost",
+        const unsigned Port = 8080,
+        const unsigned NumberOfIoThreads = 2,
+        const unsigned NumberOfCallbackThreads = 2);
 
       ~Client();
 
@@ -56,6 +59,8 @@ namespace dl::tcp
         const asio::error_code& Error,
         asio::ip::tcp::resolver::iterator iEndpoint);
 
+      void OnTimeout(const asio::error_code& Error);
+
     private:
 
       asio::io_service mIoService;
@@ -65,6 +70,8 @@ namespace dl::tcp
       asio::ip::tcp::resolver mResolver;
 
       std::experimental::optional<dl::tcp::Session> mSession;
+
+      asio::basic_waitable_timer<std::chrono::system_clock> mTimer;
 
       std::string mHostname;
 

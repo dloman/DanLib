@@ -4,18 +4,16 @@ using dl::tcp::Client;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Client::Client()
-: Client("localhost", 8080)
-{
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-Client::Client(const std::string& Hostname, const unsigned Port)
+Client::Client(
+  const std::string& Hostname,
+  const unsigned Port,
+  const unsigned NumberOfIoThreads,
+  const unsigned NumberOfCallbackThreads)
 : mIoService(),
   mCallbackService(),
   mResolver(mIoService),
   mSession(),
+  mTimer(mIoService),
   mHostname(Hostname),
   mPort(Port),
   mConnectionMutex(),
@@ -24,11 +22,11 @@ Client::Client(const std::string& Hostname, const unsigned Port)
   mpNullIoWork(std::make_unique<asio::io_service::work> (mIoService)),
   mpNullCallbackWork(std::make_unique<asio::io_service::work> (mCallbackService))
 {
-  StartWorkerThreads(mCallbackService, 1);
+  StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
 
   Connect();
 
-  StartWorkerThreads(mIoService, 1);
+  StartWorkerThreads(mIoService, NumberOfIoThreads);
 }
 
 //------------------------------------------------------------------------------
@@ -72,12 +70,7 @@ void Client::Connect()
       mSignalOnRx(Bytes);
     });
 
-  mSession->GetOnDisconnectSignal().Connect(
-    [this]
-    {
-      std::cout << "disconnect" << std::endl;
-      Connect();
-    });
+  mSession->GetOnDisconnectSignal().Connect([this] { Connect(); });
 
   asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
 
@@ -98,6 +91,8 @@ void Client::OnResolve(
 {
   if (!Error)
   {
+    mTimer.expires_from_now(std::chrono::seconds(2));
+
     asio::async_connect(
       mSession->GetSocket(),
       iEndpoint,
@@ -106,6 +101,8 @@ void Client::OnResolve(
       {
         OnConnect(Error, iEndpoint);
       });
+
+    mTimer.async_wait([this] (const asio::error_code& Error) { OnTimeout(Error); });
   }
   else
   {
@@ -122,6 +119,8 @@ void Client::OnConnect(
   if (!Error)
   {
     mSession->Start();
+
+    mTimer.cancel();
   }
   else if (iEndpoint != asio::ip::tcp::resolver::iterator())
   {
@@ -134,6 +133,20 @@ void Client::OnConnect(
       });
   }
   else
+  {
+    mSignalConnectionError(Error.message());
+  }
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Client::OnTimeout(const asio::error_code& Error)
+{
+  if (!Error)
+  {
+    Connect();
+  }
+  else if (Error != asio::error::operation_aborted)
   {
     mSignalConnectionError(Error.message());
   }
