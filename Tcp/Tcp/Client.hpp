@@ -41,6 +41,10 @@ namespace dl::tcp
 
       void Write(const std::string& Bytes);
 
+      const dl::Signal<const std::string&>& GetOnRxSignal() const;
+
+      const dl::Signal<const std::string&>& GetConnectionErrorSignal() const;
+
     private:
 
       void Connect();
@@ -69,7 +73,7 @@ namespace dl::tcp
 
       asio::ip::tcp::resolver mResolver;
 
-      std::experimental::optional<dl::tcp::Session> mSession;
+      std::shared_ptr<dl::tcp::Session> mpSession;
 
       asio::basic_waitable_timer<std::chrono::system_clock> mTimer;
 
@@ -94,4 +98,20 @@ namespace dl::tcp
       dl::Signal<const std::string&> mSignalOnRx;
 
   };
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const dl::Signal<const std::string&>& dl::tcp::Client::GetOnRxSignal() const
+  {
+    return mSignalOnRx;
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const dl::Signal<const std::string&>& dl::tcp::Client::GetConnectionErrorSignal() const
+  {
+    return mSignalConnectionError;
+  }
 }

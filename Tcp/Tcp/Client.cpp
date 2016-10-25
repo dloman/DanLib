@@ -12,7 +12,7 @@ Client::Client(
 : mIoService(),
   mCallbackService(),
   mResolver(mIoService),
-  mSession(),
+  mpSession(nullptr),
   mTimer(mIoService),
   mHostname(Hostname),
   mPort(Port),
@@ -62,15 +62,15 @@ void dl::tcp::Client::StartWorkerThreads(
 //------------------------------------------------------------------------------
 void Client::Connect()
 {
-  mSession.emplace(mIoService, mCallbackService);
+  mpSession = dl::tcp::Session::Create(mIoService, mCallbackService);
 
-  mSession->GetOnRxSignal().Connect(
+  mpSession->GetOnRxSignal().Connect(
     [this] (const std::string Bytes)
     {
       mSignalOnRx(Bytes);
     });
 
-  mSession->GetOnDisconnectSignal().Connect([this] { Connect(); });
+  mpSession->GetOnDisconnectSignal().Connect([this] { Connect(); });
 
   asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
 
@@ -94,7 +94,7 @@ void Client::OnResolve(
     mTimer.expires_from_now(std::chrono::seconds(2));
 
     asio::async_connect(
-      mSession->GetSocket(),
+      mpSession->GetSocket(),
       iEndpoint,
       [this]
       (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
@@ -118,14 +118,14 @@ void Client::OnConnect(
 {
   if (!Error)
   {
-    mSession->Start();
+    mpSession->Start();
 
     mTimer.cancel();
   }
   else if (iEndpoint != asio::ip::tcp::resolver::iterator())
   {
     asio::async_connect(
-      mSession->GetSocket(),
+      mpSession->GetSocket(),
       iEndpoint,
       [this] (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
       {
@@ -156,8 +156,8 @@ void Client::OnTimeout(const asio::error_code& Error)
 //------------------------------------------------------------------------------
 void Client::Write(const std::string& Bytes)
 {
-  if (mSession)
+  if (mpSession)
   {
-    mSession->Write(Bytes);
+    mpSession->Write(Bytes);
   }
 }

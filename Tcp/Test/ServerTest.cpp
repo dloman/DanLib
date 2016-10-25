@@ -28,7 +28,7 @@ int main()
             {
               try
               {
-                pSession->Write("Recived bytes = " + Bytes);
+                pSession->Write("Server recived bytes = " + Bytes);
                 std::cout << Bytes << std::endl;
               }
               catch(std::exception& Exception)
@@ -53,7 +53,9 @@ int main()
 
   while (true)
   {
-    TcpServer.Write("bar");
+    TcpServer.Write(
+      "Connection count = " + std::to_string(TcpServer.GetConnectionCount()));
+
     this_thread::sleep_for(chrono::milliseconds(10));
   }
   return 0;

@@ -10,11 +10,13 @@
 
 namespace dl::tcp
 {
-  class Session
+  class Session : public std::enable_shared_from_this<Session>
   {
     public:
 
-      Session(asio::io_service& IoService, asio::io_service& CallbackService);
+      static std::shared_ptr<Session> Create(
+        asio::io_service& IoService,
+        asio::io_service& CallbackService);
 
       ~Session() = default;
 
@@ -38,11 +40,17 @@ namespace dl::tcp
 
       const unsigned long& GetSessionId() const;
 
+    protected:
+
+      Session(asio::io_service& IoService, asio::io_service& CallbackService);
+
     private:
 
       void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
 
-      void AsyncWrite();
+      void AsyncWrite(std::weak_ptr<dl::tcp::Session> pWeak);
+
+      void OnWrite(const asio::error_code&, const size_t BytesTransfered);
 
       template <typename ... T, typename ... ArgsType>
       void CallSignalOnThreadPool(dl::Signal<T...>& Signal, ArgsType&& ... Args);
@@ -59,8 +67,6 @@ namespace dl::tcp
 
       asio::ip::tcp::socket mSocket;
 
-      asio::io_service::strand mStrand;
-
       std::deque<std::string> mWriteQueue;
 
       static constexpr unsigned mMaxLength = 1024;
@@ -74,6 +80,8 @@ namespace dl::tcp
       dl::Signal<const asio::error_code> mSignalReadError;
 
       dl::Signal<const asio::error_code, const std::string> mSignalWriteError;
+
+      asio::io_service::strand mStrand;
   };
 }
 
@@ -125,8 +133,9 @@ void dl::tcp::Session::CallSignalOnThreadPool(
   dl::Signal<T...>& Signal,
   ArgsType&& ... Args)
 {
-  mCallbackService.post(
-    [&Signal, &Args...] { Signal(std::forward<ArgsType>(Args)...); });
+  Signal(Args...);
+  //mCallbackService.post(
+  //[&Signal, Args...] { Signal(Args...); });
 }
 
 //------------------------------------------------------------------------------

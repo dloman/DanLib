@@ -68,8 +68,7 @@ Server::~Server()
 //------------------------------------------------------------------------------
 void Server::StartAccept()
 {
-  mpNewSession =
-    std::make_shared<dl::tcp::Session>(mIoService, mCallbackService);
+  mpNewSession = dl::tcp::Session::Create(mIoService, mCallbackService);
 
   mAcceptor.async_accept(
     mpNewSession->GetSocket(),
@@ -85,8 +84,6 @@ void Server::OnAccept(asio::error_code& Error)
 {
   if (!Error)
   {
-    mpNewSession->Start();
-
     {
       std::lock_guard<std::mutex> Lock(mMutex);
       mActiveSessions.push_back(mpNewSession);
@@ -95,7 +92,7 @@ void Server::OnAccept(asio::error_code& Error)
     auto SessionId = mpNewSession->GetSessionId();
 
     mpNewSession->GetOnDisconnectSignal().Connect(
-      [this, SessionId]
+      [this, SessionId, pCurrentSession = mpNewSession] () mutable
       {
         std::lock_guard<std::mutex> Lock(mMutex);
 
@@ -107,10 +104,15 @@ void Server::OnAccept(asio::error_code& Error)
             {
               return pSession->GetSessionId() == SessionId;
             }),
-          mActiveSessions.end());
+        mActiveSessions.end());
+
+        pCurrentSession = nullptr;
       });
 
     mSignalNewSession(mpNewSession);
+
+    mpNewSession->Start();
+
   }
   else
   {

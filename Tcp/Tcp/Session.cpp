@@ -1,10 +1,20 @@
 #include "Session.hpp"
 
 #include <iostream>
+#include <memory>
 
 using dl::tcp::Session;
 
 std::atomic<unsigned long> Session::mCount(0ul);
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+std::shared_ptr<Session> Session::Create(
+  asio::io_service& IoService,
+  asio::io_service& CallbackService)
+{
+  return std::shared_ptr<Session>(new Session(IoService, CallbackService));
+}
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -31,9 +41,28 @@ void Session::Start()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Session::AsyncWrite()
+void Session::Write(const std::string& Bytes)
 {
-  if (!mWriteQueue.empty())
+  std::weak_ptr<Session> pWeak = shared_from_this();
+  mIoService.post(mStrand.wrap(
+    [this, Bytes, pWeak]
+    {
+      if (auto pThis = pWeak.lock())
+      {
+        mWriteQueue.push_back(Bytes);
+
+        AsyncWrite(pThis);
+      }
+    }));
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Session::AsyncWrite(std::weak_ptr<Session> pWeak)
+{
+  auto pThis = pWeak.lock();
+
+  if (pThis && !mWriteQueue.empty())
   {
     auto Message = mWriteQueue.front();
 
@@ -43,26 +72,18 @@ void Session::AsyncWrite()
       mSocket,
       asio::buffer(Message),
       mStrand.wrap(
-        [this, &Message] (const asio::error_code& Error, const size_t BytesTransfered)
+        [this, pThis, &Message] (const asio::error_code& Error, const size_t BytesTransfered)
         {
           if (!Error)
           {
-            AsyncWrite();
+            AsyncWrite(pThis);
           }
           else
           {
-            CallSignalOnThreadPool(mSignalWriteError, Error, Message);
+            CallSignalOnThreadPool(mSignalWriteError, Error, std::move(Message));
           }
         }));
   }
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void Session::Write(const std::string& Bytes)
-{
-  mIoService.post(mStrand.wrap(
-    [this, Bytes] { mWriteQueue.push_back(Bytes); AsyncWrite(); }));
 }
 
 //------------------------------------------------------------------------------
