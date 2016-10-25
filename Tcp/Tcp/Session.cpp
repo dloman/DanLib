@@ -43,7 +43,7 @@ void Session::Start()
 //------------------------------------------------------------------------------
 void Session::Write(const std::string& Bytes)
 {
-  std::weak_ptr<Session> pWeak = shared_from_this();
+  std::weak_ptr<Session> pWeak = weak_from_this();
   mIoService.post(mStrand.wrap(
     [this, Bytes, pWeak]
     {
