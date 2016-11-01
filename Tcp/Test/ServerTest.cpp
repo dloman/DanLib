@@ -36,7 +36,6 @@ int main()
                 std::cerr << "ERROR: " << Exception.what();
               }
             }
-
           });
 
         auto SessionId = pSession->GetSessionId();
@@ -54,7 +53,7 @@ int main()
   while (true)
   {
     TcpServer.Write(
-      "Connection count = " + std::to_string(TcpServer.GetConnectionCount()));
+      "\nServer time = " + std::to_string(chrono::system_clock::now().time_since_epoch().count()));
 
     this_thread::sleep_for(chrono::milliseconds(10));
   }

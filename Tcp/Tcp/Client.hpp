@@ -41,13 +41,17 @@ namespace dl::tcp
 
       void Write(const std::string& Bytes);
 
-      const dl::Signal<const std::string&>& GetOnRxSignal() const;
+      const dl::Signal<const std::string>& GetOnRxSignal() const;
 
-      const dl::Signal<const std::string&>& GetConnectionErrorSignal() const;
+      const dl::Signal<const std::string>& GetConnectionErrorSignal() const;
+
+      const dl::Signal<void>& GetOnDisconnectSignal() const;
 
     private:
 
       void Connect();
+
+      void StartConnect();
 
       void StartWorkerThreads(
         asio::io_service& IoService,
@@ -93,16 +97,17 @@ namespace dl::tcp
 
       std::unique_ptr<asio::io_service::work> mpNullCallbackWork;
 
-      dl::Signal<const std::string&> mSignalConnectionError;
+      dl::Signal<const std::string> mSignalConnectionError;
 
-      dl::Signal<const std::string&> mSignalOnRx;
+      dl::Signal<const std::string> mSignalOnRx;
 
+      dl::Signal<void> mSignalOnDisconnect;
   };
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   inline
-  const dl::Signal<const std::string&>& dl::tcp::Client::GetOnRxSignal() const
+  const dl::Signal<const std::string>& dl::tcp::Client::GetOnRxSignal() const
   {
     return mSignalOnRx;
   }
@@ -110,8 +115,16 @@ namespace dl::tcp
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   inline
-  const dl::Signal<const std::string&>& dl::tcp::Client::GetConnectionErrorSignal() const
+  const dl::Signal<const std::string>& dl::tcp::Client::GetConnectionErrorSignal() const
   {
     return mSignalConnectionError;
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const dl::Signal<void>& dl::tcp::Client::GetOnDisconnectSignal() const
+  {
+    return mSignalOnDisconnect;
   }
 }

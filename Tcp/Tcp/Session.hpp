@@ -52,9 +52,6 @@ namespace dl::tcp
 
       void OnWrite(const asio::error_code&, const size_t BytesTransfered);
 
-      template <typename ... T, typename ... ArgsType>
-      void CallSignalOnThreadPool(dl::Signal<T...>& Signal, ArgsType&& ... Args);
-
     private:
 
       static std::atomic<unsigned long> mCount;
@@ -124,18 +121,6 @@ inline
 asio::ip::tcp::socket& dl::tcp::Session::GetSocket()
 {
   return mSocket;
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-template <typename ... T, typename ... ArgsType>
-void dl::tcp::Session::CallSignalOnThreadPool(
-  dl::Signal<T...>& Signal,
-  ArgsType&& ... Args)
-{
-  Signal(Args...);
-  //mCallbackService.post(
-  //[&Signal, Args...] { Signal(Args...); });
 }
 
 //------------------------------------------------------------------------------

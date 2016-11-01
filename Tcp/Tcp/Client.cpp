@@ -70,8 +70,16 @@ void Client::Connect()
       mSignalOnRx(Bytes);
     });
 
-  mpSession->GetOnDisconnectSignal().Connect([this] { Connect(); });
+  mpSession->GetOnDisconnectSignal().Connect(
+    [this] { StartConnect(); mSignalOnDisconnect();});
 
+  StartConnect();
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Client::StartConnect()
+{
   asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
 
   mResolver.async_resolve(

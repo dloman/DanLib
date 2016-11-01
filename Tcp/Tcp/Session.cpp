@@ -72,7 +72,7 @@ void Session::AsyncWrite(std::weak_ptr<Session> pWeak)
       mSocket,
       asio::buffer(Message),
       mStrand.wrap(
-        [this, pThis, &Message] (const asio::error_code& Error, const size_t BytesTransfered)
+        [this, pThis, Message] (const asio::error_code& Error, const size_t BytesTransfered)
         {
           if (!Error)
           {
@@ -80,7 +80,11 @@ void Session::AsyncWrite(std::weak_ptr<Session> pWeak)
           }
           else
           {
-            CallSignalOnThreadPool(mSignalWriteError, Error, std::move(Message));
+            mCallbackService.post(
+              [=]
+              {
+                mSignalWriteError(Error, Message);
+              });
           }
         }));
   }
@@ -93,7 +97,13 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   if (!Error)
   {
     std::string Bytes(mData, BytesTransfered);
-    CallSignalOnThreadPool(mSignalOnRx, std::move(Bytes));
+    mCallbackService.post(
+      [this, pWeak = weak_from_this(), Bytes]
+      {
+        auto pThis = pWeak.lock();
+
+        mSignalOnRx(Bytes);
+      });
 
     mSocket.async_read_some(
       asio::buffer(mData, mMaxLength),
@@ -105,10 +115,10 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   else if (
     (Error == asio::error::eof) || (Error == asio::error::connection_reset))
   {
-    CallSignalOnThreadPool(mSignalOnDisconnect);
+    mCallbackService.post([this] { mSignalOnDisconnect(); });
   }
   else
   {
-    CallSignalOnThreadPool(mSignalReadError, Error);
+    mCallbackService.post([this, Error] { mSignalReadError(Error); });
   }
 }
