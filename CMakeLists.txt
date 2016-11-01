@@ -96,6 +96,16 @@ target_link_libraries(
   Tcp
   )
 
+add_executable(
+  MultipleClientTest
+  Tcp/Test/MultiClientTest.cpp
+  )
+
+target_link_libraries(
+  MultipleClientTest
+  Tcp
+  )
+
 #------------------------------------------------------------------------------
 # Install
 #------------------------------------------------------------------------------
