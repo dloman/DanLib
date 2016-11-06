@@ -30,11 +30,19 @@ find_package(asio REQUIRED)
 
 include_directories(${asio_INCLUDE_DIR})
 
-include_directories(Tcp)
+#------------------------------------------------------------------------------
+# Utility
+#------------------------------------------------------------------------------
 
 include_directories(Utility)
 
 set(CMAKE_DEBUG_POSTFIX d)
+
+add_library(
+  String
+  Utility/String/String.cpp
+  Utility/String/String.hpp
+  )
 
 add_library(
   Signal
@@ -47,6 +55,7 @@ target_link_libraries(
   )
 
 set_target_properties(Signal PROPERTIES LINKER_LANGUAGE CXX)
+
 add_executable(
   SignalTest
   Utility/Test/SignalTest.cpp
@@ -55,6 +64,22 @@ target_link_libraries(
   SignalTest
   Signal
   )
+
+add_executable(
+  StringTest
+  Utility/Test/StringTest.cpp
+  )
+
+target_link_libraries(
+  StringTest
+  String
+  )
+
+#------------------------------------------------------------------------------
+# Tcp
+#------------------------------------------------------------------------------
+
+include_directories(Tcp)
 
 add_library(
   Tcp
