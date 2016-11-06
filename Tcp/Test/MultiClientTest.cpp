@@ -17,7 +17,8 @@ int main()
 
     for (auto& Client : Clients)
     {
-      Client.GetOnRxSignal().Connect([] (auto Bytes) { cout << Bytes << endl;});
+      Client.GetOnRxSignal().Connect
+        ([] (const auto& Bytes) { cout << Bytes << endl;});
     }
 
     for (auto& TcpClient : Clients)

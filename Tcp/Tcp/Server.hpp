@@ -40,6 +40,8 @@ namespace dl::tcp
 
       const NewSessionSignal& GetNewSessionSignal() const;
 
+      const dl::Signal<const asio::error_code&>& GetErrorSignal() const;
+
       const size_t GetConnectionCount() const;
 
       void Write(const std::string& Bytes);
@@ -72,6 +74,8 @@ namespace dl::tcp
 
       NewSessionSignal mSignalNewSession;
 
+      dl::Signal<const asio::error_code&> mErrorSignal;
+
       std::mutex mMutex;
   };
 
@@ -89,5 +93,13 @@ namespace dl::tcp
   const size_t Server::GetConnectionCount() const
   {
     return mActiveSessions.size();
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const dl::Signal<const asio::error_code&>& Server::GetErrorSignal() const
+  {
+    return mErrorSignal;
   }
 }

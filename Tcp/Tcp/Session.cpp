@@ -44,9 +44,9 @@ void Session::Start()
 void Session::Write(const std::string& Bytes)
 {
   mIoService.post(mStrand.wrap(
-    [this, Bytes, pThis = shared_from_this()]
+    [this, Bytes = std::move(Bytes), pThis = shared_from_this()]
     {
-      mWriteQueue.push_back(Bytes);
+      mWriteQueue.push_back(std::move(Bytes));
 
       AsyncWrite();
     }));
@@ -91,7 +91,7 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
 {
   if (!Error)
   {
-    std::string Bytes(mData, BytesTransfered);
+    std::string Bytes(mData.data(), BytesTransfered);
     mCallbackService.post(
       [this, pWeak = weak_from_this(), Bytes = std::move(Bytes)]
       {

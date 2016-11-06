@@ -116,9 +116,7 @@ void Server::OnAccept(asio::error_code& Error)
   }
   else
   {
-    std::cerr
-      << "ERROR: Error Accepting Session Line:"
-      << __LINE__ << " File: " << __FILE__  << std::endl;
+    mErrorSignal(Error);
   }
 
   StartAccept();

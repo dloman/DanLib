@@ -34,9 +34,9 @@ namespace dl::tcp
 
       const dl::Signal<void>& GetOnDisconnectSignal() const;
 
-      const dl::Signal<const asio::error_code>& GetSignalReadError() const;
+      const dl::Signal<const asio::error_code&>& GetSignalReadError() const;
 
-      const dl::Signal<const asio::error_code, const std::string&>& GetSignalWriteError() const;
+      const dl::Signal<const asio::error_code&, const std::string&>& GetSignalWriteError() const;
 
       const unsigned long& GetSessionId() const;
 
@@ -68,15 +68,15 @@ namespace dl::tcp
 
       static constexpr unsigned mMaxLength = 1024;
 
-      char mData[mMaxLength];
+      std::array<char, mMaxLength> mData;
 
       dl::Signal<const std::string&> mSignalOnRx;
 
       dl::Signal<void> mSignalOnDisconnect;
 
-      dl::Signal<const asio::error_code> mSignalReadError;
+      dl::Signal<const asio::error_code&> mSignalReadError;
 
-      dl::Signal<const asio::error_code, const std::string&> mSignalWriteError;
+      dl::Signal<const asio::error_code&, const std::string&> mSignalWriteError;
 
       asio::io_service::strand mStrand;
   };
@@ -101,7 +101,7 @@ const dl::Signal<void>& dl::tcp::Session::GetOnDisconnectSignal() const
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const asio::error_code>& dl::tcp::Session::GetSignalReadError() const
+const dl::Signal<const asio::error_code&>& dl::tcp::Session::GetSignalReadError() const
 {
   return mSignalReadError;
 }
@@ -109,7 +109,7 @@ const dl::Signal<const asio::error_code>& dl::tcp::Session::GetSignalReadError()
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const asio::error_code, const std::string&>&
+const dl::Signal<const asio::error_code&, const std::string&>&
   dl::tcp::Session::GetSignalWriteError() const
 {
   return mSignalWriteError;
