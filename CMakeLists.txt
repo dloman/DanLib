@@ -131,6 +131,27 @@ target_link_libraries(
   Tcp
   )
 
+add_executable(
+  HttpServerTest
+  Tcp/Test/HttpServer.cpp
+  )
+
+target_link_libraries(
+  HttpServerTest
+  String
+  Tcp
+  )
+
+add_executable(
+  HttpClientTest
+  Tcp/Test/HttpClient.cpp
+  )
+
+target_link_libraries(
+  HttpClientTest
+  Tcp
+  )
+
 #------------------------------------------------------------------------------
 # Install
 #------------------------------------------------------------------------------
