@@ -9,7 +9,7 @@ int main()
     [] (const auto& Bytes) { std::cout << "Recieved: " << Bytes << std::endl; });
 
   Serial.GetConnectionErrorSignal().Connect(
-    [] (const auto& Error) { std::cout << "Error: " << Error << std::endl; });
+    [] (const auto& Error) { std::cout << "connection Error: " << Error << std::endl; });
 
   Serial.Write("G92 Y0");
   std::this_thread::sleep_for(std::chrono::seconds(10));

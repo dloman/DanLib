@@ -1,5 +1,5 @@
 #include "Serial.hpp"
-
+#include <iostream>
 using dl::serial::Serial;
 
 //------------------------------------------------------------------------------
@@ -35,13 +35,27 @@ Serial::Serial(const std::string& Port, const unsigned Baudrate)
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+Serial::~Serial()
+{
+  mIoService.stop();
+
+  mpNullWork.reset();
+
+  for (auto& Thread : mThreads)
+  {
+    Thread.join();
+  }
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void Serial::StartWorkerThreads(
   asio::io_service& IoService,
   unsigned NumberOfThreads)
 {
   for (unsigned i = 0u; i < NumberOfThreads; ++i)
   {
-    mThreads.emplace_back([this, &IoService] { IoService.run(); });
+    mThreads.emplace_back([this, &IoService] { IoService.run();});
   }
 }
 
@@ -85,9 +99,8 @@ void Serial::ReadData()
           {
             mOnRxSignal(std::string(mData.data(), BytesReceived));
           });
-
-        ReadData();
       }
+      ReadData();
     });
 }
 
@@ -121,6 +134,10 @@ void Serial::AsyncWrite()
         {
           if (!Error)
           {
+            if (Message.size() > BytesTransfered)
+            {
+              mWriteQueue.push_front(Message.substr(BytesTransfered));
+            }
             AsyncWrite();
           }
           else

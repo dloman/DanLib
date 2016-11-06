@@ -18,6 +18,8 @@ namespace dl::serial
 
       Serial(const std::string& Port, const unsigned Baudrate);
 
+      ~Serial();
+
       Serial(const Serial& Other) = delete;
 
       Serial& operator = (const Serial& Rhs) = delete;
