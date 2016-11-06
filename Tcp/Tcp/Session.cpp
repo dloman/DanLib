@@ -43,26 +43,20 @@ void Session::Start()
 //------------------------------------------------------------------------------
 void Session::Write(const std::string& Bytes)
 {
-  std::weak_ptr<Session> pWeak = weak_from_this();
   mIoService.post(mStrand.wrap(
-    [this, Bytes, pWeak]
+    [this, Bytes, pThis = shared_from_this()]
     {
-      if (auto pThis = pWeak.lock())
-      {
-        mWriteQueue.push_back(Bytes);
+      mWriteQueue.push_back(Bytes);
 
-        AsyncWrite(pThis);
-      }
+      AsyncWrite();
     }));
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Session::AsyncWrite(std::weak_ptr<Session> pWeak)
+void Session::AsyncWrite()
 {
-  auto pThis = pWeak.lock();
-
-  if (pThis && !mWriteQueue.empty())
+  if (!mWriteQueue.empty())
   {
     auto Message = mWriteQueue.front();
 
@@ -72,11 +66,12 @@ void Session::AsyncWrite(std::weak_ptr<Session> pWeak)
       mSocket,
       asio::buffer(Message),
       mStrand.wrap(
-        [this, pThis, Message] (const asio::error_code& Error, const size_t BytesTransfered)
+        [this, pThis = shared_from_this(), Message]
+        (const asio::error_code& Error, const size_t BytesTransfered)
         {
           if (!Error)
           {
-            AsyncWrite(pThis);
+            AsyncWrite();
           }
           else
           {
@@ -98,11 +93,12 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   {
     std::string Bytes(mData, BytesTransfered);
     mCallbackService.post(
-      [this, pWeak = weak_from_this(), Bytes]
+      [this, pWeak = weak_from_this(), Bytes = std::move(Bytes)]
       {
-        auto pThis = pWeak.lock();
-
-        mSignalOnRx(Bytes);
+        if (auto pThis = pWeak.lock())
+        {
+          mSignalOnRx(Bytes);
+        }
       });
 
     mSocket.async_read_some(
@@ -115,10 +111,12 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
   else if (
     (Error == asio::error::eof) || (Error == asio::error::connection_reset))
   {
-    mCallbackService.post([this] { mSignalOnDisconnect(); });
+    mCallbackService.post(
+      [this, pThis = shared_from_this()] { mSignalOnDisconnect(); });
   }
   else
   {
-    mCallbackService.post([this, Error] { mSignalReadError(Error); });
+    mCallbackService.post(
+      [this, Error, pThis = shared_from_this()] { mSignalReadError(Error); });
   }
 }

@@ -30,13 +30,13 @@ namespace dl::tcp
 
       void Write(const std::string& Bytes);
 
-      const dl::Signal<const std::string>& GetOnRxSignal() const;
+      const dl::Signal<const std::string&>& GetOnRxSignal() const;
 
       const dl::Signal<void>& GetOnDisconnectSignal() const;
 
       const dl::Signal<const asio::error_code>& GetSignalReadError() const;
 
-      const dl::Signal<const asio::error_code, const std::string>& GetSignalWriteError() const;
+      const dl::Signal<const asio::error_code, const std::string&>& GetSignalWriteError() const;
 
       const unsigned long& GetSessionId() const;
 
@@ -48,7 +48,7 @@ namespace dl::tcp
 
       void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
 
-      void AsyncWrite(std::weak_ptr<dl::tcp::Session> pWeak);
+      void AsyncWrite();
 
       void OnWrite(const asio::error_code&, const size_t BytesTransfered);
 
@@ -70,13 +70,13 @@ namespace dl::tcp
 
       char mData[mMaxLength];
 
-      dl::Signal<const std::string> mSignalOnRx;
+      dl::Signal<const std::string&> mSignalOnRx;
 
       dl::Signal<void> mSignalOnDisconnect;
 
       dl::Signal<const asio::error_code> mSignalReadError;
 
-      dl::Signal<const asio::error_code, const std::string> mSignalWriteError;
+      dl::Signal<const asio::error_code, const std::string&> mSignalWriteError;
 
       asio::io_service::strand mStrand;
   };
@@ -85,7 +85,7 @@ namespace dl::tcp
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const std::string>& dl::tcp::Session::GetOnRxSignal() const
+const dl::Signal<const std::string&>& dl::tcp::Session::GetOnRxSignal() const
 {
   return mSignalOnRx;
 }
@@ -109,7 +109,7 @@ const dl::Signal<const asio::error_code>& dl::tcp::Session::GetSignalReadError()
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 inline
-const dl::Signal<const asio::error_code, const std::string>&
+const dl::Signal<const asio::error_code, const std::string&>&
   dl::tcp::Session::GetSignalWriteError() const
 {
   return mSignalWriteError;
