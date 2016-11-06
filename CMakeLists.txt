@@ -153,6 +153,33 @@ target_link_libraries(
   )
 
 #------------------------------------------------------------------------------
+# Serial
+#------------------------------------------------------------------------------
+
+include_directories(Serial)
+
+add_library(
+  Serial
+  Serial/Serial/Serial.cpp
+  Serial/Serial/Serial.hpp
+  )
+
+target_link_libraries(
+  Serial
+  Signal
+  )
+
+add_executable(
+  SerialTest
+  Serial/Test/SerialTest.cpp
+  )
+
+target_link_libraries(
+  SerialTest
+  Serial
+  )
+
+#------------------------------------------------------------------------------
 # Install
 #------------------------------------------------------------------------------
 set(DanLib_VERSION_STRING "${DanLib_VERSION_MAJOR}.${DanLib_VERSION_MINOR}")
