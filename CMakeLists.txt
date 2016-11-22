@@ -131,9 +131,15 @@ target_link_libraries(
   Tcp
   )
 
+#------------------------------------------------------------------------------
+# Http
+#------------------------------------------------------------------------------
+
+include_directories(Http)
+
 add_executable(
   HttpServerTest
-  Tcp/Test/HttpServer.cpp
+  Http/Utilities/HttpServer.cpp
   )
 
 target_link_libraries(
@@ -144,7 +150,7 @@ target_link_libraries(
 
 add_executable(
   HttpClientTest
-  Tcp/Test/HttpClient.cpp
+  Http/Utilities/HttpClient.cpp
   )
 
 target_link_libraries(
