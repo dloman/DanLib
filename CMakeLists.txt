@@ -167,6 +167,7 @@ add_library(
 target_link_libraries(
   Serial
   Signal
+  stdc++fs
   )
 
 add_executable(
@@ -217,6 +218,7 @@ install(
 TARGETS
   Tcp
   Signal
+  Serial
 DESTINATION
   ${DanLib_DIRNAME_lib}
 EXPORT
@@ -250,5 +252,12 @@ install(
     Tcp/Tcp/Server.hpp
     Tcp/Tcp/Session.hpp
   DESTINATION
-  ${DanLib_DIRNAME_include}/Tcp
+    ${DanLib_DIRNAME_include}/Tcp
+  )
+
+install(
+  FILES
+    Serial/Serial/Serial.hpp
+  DESTINATION
+  ${DanLib_DIRNAME_include}/Serial
   )

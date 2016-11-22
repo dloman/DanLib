@@ -16,6 +16,10 @@ namespace dl::serial
   {
     public:
 
+      static std::vector<std::string> GetAvailableSerialPorts();
+
+      static std::unique_ptr<Serial> GetSerialConnection(const unsigned Baudrate);
+
       Serial(const std::string& Port, const unsigned Baudrate);
 
       ~Serial();
@@ -27,8 +31,6 @@ namespace dl::serial
       const dl::Signal<const std::string&>& GetOnRxSignal() const;
 
       const dl::Signal<const std::string&>& GetOnReadErrorSignal() const;
-
-      const dl::Signal<const std::string&>& GetConnectionErrorSignal() const;
 
       void Write(const std::string& Bytes);
 
@@ -64,8 +66,6 @@ namespace dl::serial
 
       dl::Signal<const std::string&, const std::string&> mWriteErrorSignal;
 
-      dl::Signal<const std::string&> mConnectionErrorSignal;
-
       static constexpr unsigned mMaxLength = 2048;
 
       std::array<char, mMaxLength> mData;
@@ -88,16 +88,6 @@ namespace dl::serial
   {
     return mOnReadErrorSignal;
   }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<const std::string&>& dl::serial::Serial::GetConnectionErrorSignal() const
-  {
-    return mConnectionErrorSignal;
-  }
-
-  //----------------------------------------------------------------------------
 
 }
 

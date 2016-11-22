@@ -1,5 +1,7 @@
 #include "Serial.hpp"
+#include <experimental/filesystem>
 #include <iostream>
+#include <regex>
 using dl::serial::Serial;
 
 //------------------------------------------------------------------------------
@@ -15,16 +17,9 @@ Serial::Serial(const std::string& Port, const unsigned Baudrate)
    mData(),
    mStrand(mIoService)
 {
-  try
-  {
-    mSerialPort.open(Port);
+  mSerialPort.open(Port);
 
-    SetOptions(Baudrate);
-  }
-  catch (const std::exception& Exception)
-  {
-    mConnectionErrorSignal(Exception.what());
-  }
+  SetOptions(Baudrate);
 
   mIoService.post([this] { ReadData(); });
 
@@ -151,3 +146,40 @@ void Serial::AsyncWrite()
         }));
   }
 }
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+std::vector<std::string> Serial::GetAvailableSerialPorts()
+{
+  std::vector<std::string> SerialPorts;
+  for (auto& File : std::experimental::filesystem::directory_iterator("/dev"))
+  {
+    const auto& Filename = File.path().filename().string();
+    if (
+      std::regex_match(Filename, std::regex("ttyUSB[[:digit:]]")) ||
+      std::regex_match(Filename, std::regex("ttyACM[[:digit:]]")))
+    {
+      SerialPorts.emplace_back("/dev/" + Filename);
+    }
+  }
+
+  return SerialPorts;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+std::unique_ptr<Serial> Serial::GetSerialConnection(const unsigned Baudrate)
+{
+  for (const auto Port : GetAvailableSerialPorts())
+  {
+    try
+    {
+      return std::make_unique<Serial>(Port, Baudrate);
+    }
+    catch(...)
+    {
+    }
+  }
+  return nullptr;
+}
+
