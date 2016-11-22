@@ -187,6 +187,56 @@ target_link_libraries(
   )
 
 #------------------------------------------------------------------------------
+# Robot
+#------------------------------------------------------------------------------
+
+include_directories(Robot)
+
+add_library(
+  Robot
+  Robot/Robot/PacketAssembler.cpp
+  Robot/Robot/PacketAssembler.hpp
+  Robot/Robot/PacketDecoder.cpp
+  Robot/Robot/PacketDecoder.hpp
+  Robot/Robot/PacketEncoder.hpp
+  Robot/Robot/Packets.hpp
+  )
+
+target_link_libraries(
+  Robot
+  Signal
+  )
+
+add_executable(
+  RobotServer
+  Robot/Utilities/RobotServer.cpp
+  )
+
+target_link_libraries(
+  RobotServer
+  Robot
+  )
+
+add_executable(
+  RobotClient
+  Robot/Utilities/RobotClient.cpp
+  )
+
+target_link_libraries(
+  RobotClient
+  Robot
+  )
+
+add_executable(
+  RobotPacketTester
+  Robot/Test/PacketTest.cpp
+  )
+
+target_link_libraries(
+  RobotPacketTester
+  Robot
+  )
+#------------------------------------------------------------------------------
 # Install
 #------------------------------------------------------------------------------
 set(DanLib_VERSION_STRING "${DanLib_VERSION_MAJOR}.${DanLib_VERSION_MINOR}")
