@@ -7,14 +7,9 @@
 
 namespace dl::robot::packet
 {
-  enum class PacketType
-  {
-    eMotorCommand
-  };
-
   struct Header
   {
-    PacketType mPacketType;
+    //mPacketTypeIndex;
     uint8_t mVersion;
     size_t mPayloadSize;
   };
@@ -30,5 +25,4 @@ namespace dl::robot::packet
   };
 
   constexpr uint8_t CurrentPacketVersion = 0;
-
 }

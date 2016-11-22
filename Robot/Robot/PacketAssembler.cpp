@@ -20,7 +20,7 @@ void PacketAssembler::AssemblePacket()
     return;
   }
 
-  auto Header = dl::robot::PacketDecoder::DecodeHeader(mBytes);
+  auto Header = dl::robot::PacketDecoder<dl::robot::packet::MotorCommand>::DecodeHeader(mBytes);
 
   auto PacketSize = mHeaderSize + Header.mPayloadSize;
 

@@ -1,5 +1,6 @@
 #include <Robot/PacketEncoder.hpp>
 #include <Robot/PacketDecoder.hpp>
+#include <Robot/Packets.hpp>
 
 #include <boost/hana/assert.hpp>
 #include <boost/hana/members.hpp>
@@ -7,20 +8,16 @@
 
 #include <iostream>
 
-dl::robot::PacketDecoder gPacketDecoder;
-
-namespace hana = boost::hana;
+dl::robot::PacketDecoder<dl::robot::packet::MotorCommand> gPacketDecoder;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 template<typename Type>
-void TestPacket(Type Packet, dl::robot::packet::PacketType PacketType)
+void TestPacket(Type Packet)
 {
   auto EncodedPacket = dl::robot::PacketEncoder::Encode(Packet);
 
   dl::robot::packet::Header Header;
-
-  Header.mPacketType = PacketType;
 
   Header.mVersion = dl::robot::packet::CurrentPacketVersion;
 
@@ -39,16 +36,20 @@ int main()
   MotorCommand.mMotor1 = 2;
   MotorCommand.mMotor2 = 3;
 
-  gPacketDecoder.GetMotorCommandSignal().Connect(
+  gPacketDecoder.GetSignal<dl::robot::packet::MotorCommand>().Connect(
     [&MotorCommand] (const auto& DecodedMotorCommand)
     {
-      BOOST_HANA_RUNTIME_CHECK(
-        hana::members(DecodedMotorCommand) == hana::members(MotorCommand));
+    BOOST_HANA_RUNTIME_CHECK(
+      boost::hana::members(DecodedMotorCommand) == boost::hana::members(MotorCommand));
     });
 
   try
   {
-    TestPacket(MotorCommand, dl::robot::packet::PacketType::eMotorCommand);
+    TestPacket(MotorCommand);
+
+    MotorCommand.mMotor0 = 69;
+
+    TestPacket(MotorCommand);
   }
   catch (std::exception& Exception)
   {

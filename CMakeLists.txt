@@ -196,7 +196,6 @@ add_library(
   Robot
   Robot/Robot/PacketAssembler.cpp
   Robot/Robot/PacketAssembler.hpp
-  Robot/Robot/PacketDecoder.cpp
   Robot/Robot/PacketDecoder.hpp
   Robot/Robot/PacketEncoder.hpp
   Robot/Robot/Packets.hpp
