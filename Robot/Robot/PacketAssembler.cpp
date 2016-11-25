@@ -1,4 +1,5 @@
 #include "PacketAssembler.hpp"
+#include "PacketDecoder.hpp"
 
 using dl::robot::PacketAssembler;
 
@@ -20,7 +21,7 @@ void PacketAssembler::AssemblePacket()
     return;
   }
 
-  auto Header = dl::robot::PacketDecoder<dl::robot::packet::MotorCommand>::DecodeHeader(mBytes);
+  auto Header = dl::robot::PacketDecoder<dl::robot::packet::Header>::DecodeHeader(mBytes);
 
   auto PacketSize = mHeaderSize + Header.mPayloadSize;
 

@@ -8,7 +8,9 @@
 
 #include <iostream>
 
-dl::robot::PacketDecoder<dl::robot::packet::MotorCommand> gPacketDecoder;
+using namespace dl::robot;
+using DecoderType = PacketDecoder<packet::MotorCommand, packet::Position>;
+DecoderType gPacketDecoder;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------

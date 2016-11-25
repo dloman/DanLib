@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Robot/PacketDecoder.hpp>
+#include <Robot/Packets.hpp>
 #include <Signal/Signal.hpp>
 
 #include <experimental/string_view>
@@ -15,7 +15,7 @@ namespace dl::robot
 
       void AddBytes(std::string&& Bytes);
 
-      const dl::Signal<std::experimental::string_view>& GetPacketAssemblerSignal() const;
+      const dl::Signal<std::experimental::string_view>& GetPacketAssembledSignal() const;
 
     private:
 
@@ -35,7 +35,7 @@ namespace dl::robot
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   inline const dl::Signal<std::experimental::string_view>&
-    dl::robot::PacketAssembler::GetPacketAssemblerSignal() const
+    dl::robot::PacketAssembler::GetPacketAssembledSignal() const
   {
     return mPacketAssembledSignal;
   }
