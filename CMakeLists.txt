@@ -39,6 +39,18 @@ include_directories(Utility)
 set(CMAKE_DEBUG_POSTFIX d)
 
 add_library(
+  Math
+  Utility/Math/Vector.hpp
+  )
+
+set_target_properties(Math PROPERTIES LINKER_LANGUAGE CXX)
+
+add_executable(
+  MathTest
+  Utility/Test/MathTest.cpp
+  )
+
+add_library(
   String
   Utility/String/String.cpp
   Utility/String/String.hpp
