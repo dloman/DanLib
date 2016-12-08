@@ -16,9 +16,6 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/basic_waitable_timer.hpp>
 
-//#include <optional>
-#include <experimental/optional>
-
 #include <thread>
 
 namespace dl::tcp
@@ -42,6 +39,8 @@ namespace dl::tcp
       void Write(const std::string& Bytes);
 
       const dl::Signal<const std::string>& GetOnRxSignal() const;
+
+      const dl::Signal<void>& GetConnectionSignal() const;
 
       const dl::Signal<const std::string>& GetConnectionErrorSignal() const;
 
@@ -97,6 +96,8 @@ namespace dl::tcp
 
       std::unique_ptr<asio::io_service::work> mpNullCallbackWork;
 
+      dl::Signal<void> mSignalConnection;
+
       dl::Signal<const std::string> mSignalConnectionError;
 
       dl::Signal<const std::string> mSignalOnRx;
@@ -110,6 +111,14 @@ namespace dl::tcp
   const dl::Signal<const std::string>& dl::tcp::Client::GetOnRxSignal() const
   {
     return mSignalOnRx;
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  const dl::Signal<void >& dl::tcp::Client::GetConnectionSignal() const
+  {
+    return mSignalConnection;
   }
 
   //----------------------------------------------------------------------------
