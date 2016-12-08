@@ -149,6 +149,12 @@ target_link_libraries(
 
 include_directories(Http)
 
+add_library(
+  Http
+  Http/Http/Responce.cpp
+  Http/Http/Responce.hpp
+  )
+
 add_executable(
   HttpServerTest
   Http/Utilities/HttpServer.cpp
@@ -196,6 +202,32 @@ add_executable(
 target_link_libraries(
   SerialTest
   Serial
+  )
+
+#------------------------------------------------------------------------------
+# Tcp
+#------------------------------------------------------------------------------
+include_directories(Requests)
+
+add_library(
+  Requests
+  Requests/Requests/Requests.hpp
+  )
+
+target_link_libraries(
+  Requests
+  Tcp
+  )
+
+add_executable(
+  RequestsTest
+  Requests/Test/RequestTest.cpp
+  )
+
+target_link_libraries(
+  RequestsTest
+  Tcp
+  Http
   )
 
 #------------------------------------------------------------------------------

@@ -128,6 +128,8 @@ void Client::OnConnect(
   {
     mpSession->Start();
 
+    mSignalConnection();
+
     mTimer.cancel();
   }
   else if (iEndpoint != asio::ip::tcp::resolver::iterator())

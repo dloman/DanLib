@@ -66,7 +66,7 @@ int main()
                   "Connection: close\r\n" <<
                   "Content-Type: text/html\r\n" <<
                   "X-Pad: avoid browser bug\r\n\r\n" <<
-                  "<html><body><h1>It works!</h1></body></html>\r\n";
+                  "<html><body><h1>It works!</h1></body></html>\r\n\r\n";
                 pSession->Write(Stream.str());
 
               }
