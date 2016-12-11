@@ -12,52 +12,7 @@
 #include <cstring>
 #include <experimental/string_view>
 #include <tuple>
-
-namespace dl::FillMap
-{
-  template<size_t I>
-    struct FillMapImpl
-    {
-      template<typename PacketTuple, typename SignalTuple, typename MapType, typename DecoderType>
-        static void FillMap(
-          PacketTuple& Packets,
-          SignalTuple& Signals,
-          MapType& Map,
-          DecoderType& Decoder,
-          size_t Index)
-        {
-          if (Index == I - 1)
-          {
-            using PacketType = decltype(std::get<I - 1>(Packets));
-            auto& Signal = std::get<I - 1>(Signals);
-            Map[boost::typeindex::type_id<PacketType>()] =
-              [&Signal, &Decoder] (std::experimental::string_view& Bytes)
-              {
-                Signal(Decoder.DecodePacket<PacketType>(Bytes));
-              };
-          }
-          else
-          {
-            FillMapImpl<I - 1>::FillMap(Packets, Signals, Map, Decoder, Index);
-          }
-        }
-    };
-
-  template<>
-    struct FillMapImpl<0>
-    {
-      template<typename PacketTuple, typename SignalTuple, typename MapType, typename DecoderType>
-        static void FillMap(
-          PacketTuple& Packets,
-          SignalTuple& Signals,
-          MapType& Map,
-          DecoderType& Decoder,
-          size_t Index)
-        {
-          assert(false);
-        }
-    };
-}
+#include <iostream>
 
 namespace dl::robot
 {
@@ -68,21 +23,15 @@ namespace dl::robot
 
       PacketDecoder()
       {
-        for(auto i = 0u; i < sizeof...(PacketTypes); ++i)
-        {
-          dl::FillMap::FillMapImpl<sizeof...(PacketTypes)>::FillMap(
-            mPacketTypes,
-            mPacketSignals,
-            mPacketDecoders,
-            *this,
-            i);
-        }
+        FillMap(mPacketTypes, mPacketDecoders);
       }
 
       static dl::robot::packet::Header DecodeHeader(
         std::experimental::string_view Bytes)
       {
         dl::robot::packet::Header Header;
+
+        Header.mPacketTypeIndex = Decode<boost::typeindex::type_index>(Bytes);
 
         Header.mVersion = Decode<uint8_t>(Bytes);
 
@@ -104,7 +53,14 @@ namespace dl::robot
             std::to_string(dl::robot::packet::CurrentPacketVersion));
         }
 
-        //mPacketDecoders[Header.mPacketTypeIndex](Bytes);
+        if (mPacketDecoders.count(Header.mPacketTypeIndex))
+        {
+          mPacketDecoders[Header.mPacketTypeIndex](Bytes);
+        }
+        else
+        {
+          std::cerr << "WHY MUST I CRY" << std::endl;
+        }
       }
 
       template <typename PacketType>
@@ -127,6 +83,7 @@ namespace dl::robot
                 Member =
                   dl::robot::PacketDecoder<PacketTypes...>::Decode<
                     std::remove_reference_t<decltype(Member)>> (Bytes);
+
               });
           };
 
@@ -148,6 +105,28 @@ namespace dl::robot
 
         return Value;
       }
+
+      template<std::size_t Index = 0, typename TupleType, typename MapType>
+        typename std::enable_if_t<Index != std::tuple_size<TupleType>::value>
+        FillMap(const TupleType& Tuple, MapType& Map)
+        {
+          using PacketType = decltype(std::get<Index>(Tuple));
+          Map[boost::typeindex::type_id<PacketType>()] =
+            [&] (std::experimental::string_view& Bytes)
+            {
+              auto Packet = DecodePacket<std::decay_t<PacketType>>(Bytes);
+              auto& Signal = std::get<dl::Signal<const PacketType&>>(mPacketSignals);
+              Signal(Packet);
+            };
+
+          FillMap<Index + 1>(Tuple, Map);
+        }
+
+      template<std::size_t Index = 0, typename TupleType, typename MapType>
+        typename std::enable_if_t<Index == std::tuple_size<TupleType>::value>
+        FillMap(const TupleType& Tuple, MapType& Map)
+        {
+        }
 
     private:
 

@@ -19,7 +19,10 @@ namespace dl::robot
         {
           boost::hana::for_each(
             boost::hana::members(Object),
-            [&](auto Member) { OutputStream << Member; });
+            [&](auto Member)
+            {
+              OutputStream.write(reinterpret_cast<char*>(&Member), sizeof(Member));
+            });
         };
 
         Serialize(OutputStream, ThingToEncode);

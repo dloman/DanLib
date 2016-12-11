@@ -21,6 +21,8 @@ void TestPacket(Type Packet)
 
   dl::robot::packet::Header Header;
 
+  Header.mPacketTypeIndex = boost::typeindex::type_id<Type>();
+
   Header.mVersion = dl::robot::packet::CurrentPacketVersion;
 
   Header.mPayloadSize = sizeof(Packet);
@@ -38,11 +40,34 @@ int main()
   MotorCommand.mMotor1 = 2;
   MotorCommand.mMotor2 = 3;
 
+  dl::robot::packet::Position Position;
+
+  Position.mPostionX = 69;
+  Position.mPostionY = 420;
+  Position.mPostionZ = 1337;
+
   gPacketDecoder.GetSignal<dl::robot::packet::MotorCommand>().Connect(
     [&MotorCommand] (const auto& DecodedMotorCommand)
     {
-    BOOST_HANA_RUNTIME_CHECK(
-      boost::hana::members(DecodedMotorCommand) == boost::hana::members(MotorCommand));
+      BOOST_HANA_RUNTIME_CHECK(
+        boost::hana::members(DecodedMotorCommand) == boost::hana::members(MotorCommand));
+
+      std::cout << "Motor Command = "
+        << static_cast<int>(DecodedMotorCommand.mMotor0) << ','
+        << static_cast<int>(DecodedMotorCommand.mMotor1) << ','
+        << static_cast<int>(DecodedMotorCommand.mMotor2) << std::endl;
+    });
+
+  gPacketDecoder.GetSignal<dl::robot::packet::Position>().Connect(
+    [&Position] (const auto& DecodedPosition)
+    {
+      BOOST_HANA_RUNTIME_CHECK(
+        boost::hana::members(DecodedPosition) == boost::hana::members(Position));
+
+      std::cout << "Position = "
+        << DecodedPosition.mPostionX << ','
+        << DecodedPosition.mPostionY << ','
+        << DecodedPosition.mPostionZ << std::endl;
     });
 
   try
@@ -52,6 +77,12 @@ int main()
     MotorCommand.mMotor0 = 69;
 
     TestPacket(MotorCommand);
+
+    TestPacket(Position);
+
+    Position.mPostionX = 4444;
+
+    TestPacket(Position);
   }
   catch (std::exception& Exception)
   {
@@ -61,5 +92,3 @@ int main()
 
   return 0;
 }
-
-

@@ -10,7 +10,7 @@ namespace dl::robot::packet
 {
   struct Header
   {
-    //boost::typeindex::type_index mPacketTypeIndex;
+    boost::typeindex::type_index mPacketTypeIndex;
     uint8_t mVersion;
     size_t mPayloadSize;
   };
