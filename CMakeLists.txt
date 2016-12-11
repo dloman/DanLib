@@ -30,6 +30,10 @@ find_package(asio REQUIRED)
 
 include_directories(${asio_INCLUDE_DIR})
 
+find_package(OpenSSL REQUIRED)
+
+include_directories(${OPENSSL_INCLUDE_DIR})
+
 #------------------------------------------------------------------------------
 # Utility
 #------------------------------------------------------------------------------
@@ -101,6 +105,10 @@ add_library(
   Tcp/Tcp/Server.hpp
   Tcp/Tcp/Session.cpp
   Tcp/Tcp/Session.hpp
+  Tcp/Tcp/SslClient.cpp
+  Tcp/Tcp/SslClient.hpp
+  Tcp/Tcp/SslSession.cpp
+  Tcp/Tcp/SslSession.hpp
   )
 
 target_link_libraries(
@@ -141,6 +149,17 @@ add_executable(
 target_link_libraries(
   MultipleClientTest
   Tcp
+  )
+
+add_executable(
+  SslClientTest
+  Tcp/Test/SslClientTest.cpp
+  )
+
+target_link_libraries(
+  SslClientTest
+  Tcp
+  ${OPENSSL_LIBRARIES}
   )
 
 #------------------------------------------------------------------------------
