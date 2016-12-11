@@ -211,6 +211,7 @@ include_directories(Requests)
 
 add_library(
   Requests
+  Requests/Requests/Requests.cpp
   Requests/Requests/Requests.hpp
   )
 
@@ -226,6 +227,7 @@ add_executable(
 
 target_link_libraries(
   RequestsTest
+  Requests
   Tcp
   Http
   )
