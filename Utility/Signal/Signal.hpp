@@ -18,7 +18,7 @@ namespace dl
       template <class ... ArgsType>
       void operator()(ArgsType&& ... Args);
 
-      size_t GetConnectedSlotCount();
+      size_t GetConnectedSlotCount() const;
 
     private:
 
@@ -55,7 +55,7 @@ namespace dl
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   template <typename ... T>
-  size_t Signal<T...>::GetConnectedSlotCount()
+  size_t Signal<T...>::GetConnectedSlotCount() const
   {
     std::lock_guard<std::mutex> LockGuard(mMutex);
 
