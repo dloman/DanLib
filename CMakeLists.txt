@@ -337,6 +337,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 
 install(
 TARGETS
+  Requests
   Tcp
   Signal
   Serial
@@ -359,6 +360,20 @@ install(
     ${CMAKE_CURRENT_BINARY_DIR}/DanLibConfigVersion.cmake
   DESTINATION
     ${DanLib_DIRNAME_lib}
+  )
+
+install(
+  FILES
+    Http/Http/Responce.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/Http
+  )
+
+install(
+  FILES
+    Requests/Requests/Requests.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/Requests
   )
 
 install(

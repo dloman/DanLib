@@ -20,7 +20,7 @@ Client::Client(
   mThreads(),
   mIsRunning(true),
   mpNullIoWork(std::make_unique<asio::io_service::work> (mIoService)),
-  mpNullCallbackWork(std::make_unique<asio::io_service::work> (mCallbackService))
+  mpNullCallbackWork(std::make_unique<asio::io_service::work>(mCallbackService))
 {
   StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
 

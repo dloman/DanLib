@@ -26,11 +26,18 @@ static std::string ParseRequest(const std::string& Request)
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-int main()
+int main(int argc, const char** argv)
 {
+  int Port = 80;
+
+  if (argc > 1)
+  {
+    Port = std::atoi(argv[1]);
+  }
+
   try
   {
-    dl::tcp::Server TcpServer(80, 1, 1);
+    dl::tcp::Server TcpServer(Port, 1, 1);
 
     std::cout << "Server Listening " << std::endl;
 
