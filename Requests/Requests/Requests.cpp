@@ -83,21 +83,14 @@ namespace dl::request
         Client.GetConnectionSignal().Connect(
           [&Client, &Data]
           {
-          std::cout << "Connected writiing data" << std::endl;
-            Client.Write(Data);
+            static bool FirstTime = true;
+            if (FirstTime)
+            {
+              std::cout << "Connected writing data" << std::endl;
+              Client.Write(Data);
+              FirstTime = false;
+            }
           });
-
-        Client.GetOnDisconnectSignal().Connect(
-          [&Promise]{
-              try
-              {
-                throw std::logic_error("Server Disconnected");
-              }
-              catch (const std::exception& Exception)
-              {
-                Promise.set_exception(std::current_exception());
-              }
-            });
 
         std::unique_lock<std::mutex> Lock(Mutex);
 

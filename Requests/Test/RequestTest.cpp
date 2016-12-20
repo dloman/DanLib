@@ -18,7 +18,7 @@ int main()
   }
   catch (const std::exception& Exception)
   {
-    std::cerr << Exception.what() << std::endl;
+    std::cerr << "ERROR: " << Exception.what() << std::endl;
   }
 
   return 0;
