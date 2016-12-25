@@ -7,9 +7,9 @@ using namespace std;
 //------------------------------------------------------------------------------
 int main()
 {
-  dl::tcp::Server TcpServer(8080, 2, 2);
+  dl::tcp::Server TcpServer(8181, 2, 2);
 
-  cout << "Server Listening on 8080" << endl;
+  cout << "Server Listening on 8181" << endl;
 
   TcpServer.GetNewSessionSignal().Connect(
     [] (std::weak_ptr<dl::tcp::Session> pWeakSession)

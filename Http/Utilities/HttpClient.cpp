@@ -19,11 +19,11 @@ int main(int argc, const char** argv)
   {
     Port = std::atoi(argv[2]);
   }
-  cout << "Client connecting on localhost 8080" << endl;
+  cout << "Client connecting on localhost 80" << endl;
 
   std::atomic<bool> Finished = false;
 
-  dl::tcp::Client Client("localhost", 80);
+  dl::tcp::Client Client("example.com", 80);
 
   Client.GetOnRxSignal().Connect([] (const auto& Bytes) { cout << Bytes << endl;});
 

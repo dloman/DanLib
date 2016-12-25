@@ -8,9 +8,8 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 #pragma once
-#include <Tcp/Session.hpp>
-
 #include <Signal/Signal.hpp>
+#include <Tcp/SessionFactory.hpp>
 
 #include <asio/io_service.hpp>
 #include <asio/ip/tcp.hpp>
@@ -20,13 +19,14 @@
 
 namespace dl::tcp
 {
+  template <typename SessionType = dl::tcp::Session>
   class Client
   {
     public:
 
       Client(
         const std::string& Hostname = "localhost",
-        const unsigned Port = 8080,
+        const unsigned Port = 8181,
         const unsigned NumberOfIoThreads = 2,
         const unsigned NumberOfCallbackThreads = 2);
 
@@ -107,32 +107,212 @@ namespace dl::tcp
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<const std::string>& dl::tcp::Client::GetOnRxSignal() const
+  template <typename SessionType>
+  dl::tcp::Client<SessionType>::Client(
+    const std::string& Hostname,
+    const unsigned Port,
+    const unsigned NumberOfIoThreads,
+    const unsigned NumberOfCallbackThreads)
+  : mIoService(),
+    mCallbackService(),
+    mResolver(mIoService),
+    mpSession(nullptr),
+    mTimer(mIoService),
+    mHostname(Hostname),
+    mPort(Port),
+    mConnectionMutex(),
+    mThreads(),
+    mIsRunning(true),
+    mpNullIoWork(std::make_unique<asio::io_service::work> (mIoService)),
+    mpNullCallbackWork(std::make_unique<asio::io_service::work>(mCallbackService))
+  {
+    StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
+
+    Connect();
+
+    StartWorkerThreads(mIoService, NumberOfIoThreads);
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  dl::tcp::Client<SessionType>::~Client()
+  {
+    mIsRunning = false;
+
+    mIoService.stop();
+
+    mpNullIoWork.reset();
+
+    mpNullCallbackWork.reset();
+
+    for (auto& Thread : mThreads)
+    {
+      Thread.join();
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::StartWorkerThreads(
+    asio::io_service& IoService,
+    unsigned NumberOfThreads)
+  {
+    for (unsigned i = 0u; i < NumberOfThreads; ++i)
+    {
+      mThreads.emplace_back([&IoService] { IoService.run(); });
+    }
+  }
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::Connect()
+  {
+    mpSession =
+      dl::tcp::SessionFactory::Create<SessionType>(mIoService, mCallbackService);
+
+    mpSession->GetOnRxSignal().Connect(
+      [this] (const std::string Bytes)
+      {
+        mSignalOnRx(Bytes);
+      });
+
+    mpSession->GetOnDisconnectSignal().Connect(
+      [this] { StartConnect(); mSignalOnDisconnect();});
+
+    StartConnect();
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::StartConnect()
+  {
+    asio::ip::tcp::resolver::query Query(mHostname, std::to_string(mPort));
+
+    mResolver.async_resolve(
+      Query,
+      [this]
+      (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+      {
+        OnResolve(Error, iEndpoint);
+      });
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::OnResolve(
+    const asio::error_code& Error,
+    asio::ip::tcp::resolver::iterator iEndpoint)
+  {
+    if (!Error)
+    {
+      mTimer.expires_from_now(std::chrono::seconds(2));
+
+      asio::async_connect(
+        mpSession->GetSocket(),
+        iEndpoint,
+        [this]
+        (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+        {
+          OnConnect(Error, iEndpoint);
+        });
+
+      mTimer.async_wait([this] (const asio::error_code& Error) { OnTimeout(Error); });
+    }
+    else
+    {
+      mSignalConnectionError(Error.message());
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::OnConnect(
+    const asio::error_code& Error,
+    asio::ip::tcp::resolver::iterator iEndpoint)
+  {
+    if (!Error)
+    {
+      mpSession->Start();
+
+      mSignalConnection();
+
+      mTimer.cancel();
+    }
+    else if (iEndpoint != asio::ip::tcp::resolver::iterator())
+    {
+      asio::async_connect(
+        mpSession->GetSocket(),
+        iEndpoint,
+        [this] (const asio::error_code& Error, asio::ip::tcp::resolver::iterator iEndpoint)
+        {
+          OnConnect(Error, ++iEndpoint);
+        });
+    }
+    else
+    {
+      mSignalConnectionError(Error.message());
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::OnTimeout(const asio::error_code& Error)
+  {
+    if (!Error)
+    {
+      Connect();
+    }
+    else if (Error != asio::error::operation_aborted)
+    {
+      mSignalConnectionError(Error.message());
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  void dl::tcp::Client<SessionType>::Write(const std::string& Bytes)
+  {
+    if (mpSession)
+    {
+      mpSession->Write(Bytes);
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename SessionType>
+  const dl::Signal<const std::string>& dl::tcp::Client<SessionType>::GetOnRxSignal() const
   {
     return mSignalOnRx;
   }
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<void >& dl::tcp::Client::GetConnectionSignal() const
+  template <typename SessionType>
+  const dl::Signal<void >& dl::tcp::Client<SessionType>::GetConnectionSignal() const
   {
     return mSignalConnection;
   }
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<const std::string>& dl::tcp::Client::GetConnectionErrorSignal() const
+  template <typename SessionType>
+  const dl::Signal<const std::string>& dl::tcp::Client<SessionType>::GetConnectionErrorSignal() const
   {
     return mSignalConnectionError;
   }
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<void>& dl::tcp::Client::GetOnDisconnectSignal() const
+  template <typename SessionType>
+  const dl::Signal<void>& dl::tcp::Client<SessionType>::GetOnDisconnectSignal() const
   {
     return mSignalOnDisconnect;
   }

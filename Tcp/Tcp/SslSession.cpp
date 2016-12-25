@@ -5,8 +5,6 @@
 
 using dl::tcp::SslSession;
 
-std::atomic<unsigned long> SslSession::mCount(0ul);
-
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 std::shared_ptr<SslSession> SslSession::Create(
@@ -19,13 +17,9 @@ std::shared_ptr<SslSession> SslSession::Create(
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 SslSession::SslSession(asio::io_service& IoService, asio::io_service& CallbackService)
- : mSslSessionId(++mCount),
-   mIoService(IoService),
-   mCallbackService(CallbackService),
+ : dl::tcp::Session(IoService, CallbackService),
    mContext(asio::ssl::context::sslv23),
-   mSocket(mIoService),
-   mStream(mSocket, mContext),
-   mStrand(mIoService)
+   mStream(mSocket, mContext)
 {
 }
 
@@ -43,19 +37,6 @@ void SslSession::Start()
     {
       OnRead(Error, BytesTransfered);
     });
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-void SslSession::Write(const std::string& Bytes)
-{
-  mIoService.post(mStrand.wrap(
-    [this, Bytes = std::move(Bytes), pThis = shared_from_this()]
-    {
-      mWriteQueue.push_back(std::move(Bytes));
-
-      AsyncWrite();
-    }));
 }
 
 //------------------------------------------------------------------------------

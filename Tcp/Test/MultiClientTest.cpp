@@ -9,11 +9,11 @@ using namespace std;
 //------------------------------------------------------------------------------
 int main()
 {
-  cout << "Client connecting on localhost 8080" << endl;
+  cout << "Client connecting on localhost 8181" << endl;
 
   for (int i = 0; i < 1000; ++i)
   {
-    std::array<dl::tcp::Client, 100> Clients;
+    std::array<dl::tcp::Client<dl::tcp::Session>, 100> Clients;
 
     for (auto& Client : Clients)
     {

@@ -99,21 +99,20 @@ include_directories(Tcp)
 
 add_library(
   Tcp
-  Tcp/Tcp/Client.cpp
   Tcp/Tcp/Client.hpp
   Tcp/Tcp/Server.cpp
   Tcp/Tcp/Server.hpp
   Tcp/Tcp/Session.cpp
   Tcp/Tcp/Session.hpp
-  Tcp/Tcp/SslClient.cpp
-  Tcp/Tcp/SslClient.hpp
   Tcp/Tcp/SslSession.cpp
   Tcp/Tcp/SslSession.hpp
+  Tcp/Tcp/SessionFactory.hpp
   )
 
 target_link_libraries(
   Tcp
   Signal
+  ${OPENSSL_LIBRARIES}
   )
 
 add_executable(
@@ -159,7 +158,6 @@ add_executable(
 target_link_libraries(
   SslClientTest
   Tcp
-  ${OPENSSL_LIBRARIES}
   )
 
 #------------------------------------------------------------------------------
@@ -172,6 +170,11 @@ add_library(
   Http
   Http/Http/Responce.cpp
   Http/Http/Responce.hpp
+  )
+
+target_link_libraries(
+  Http
+  String
   )
 
 add_executable(

@@ -24,7 +24,7 @@ namespace dl::tcp
 
       Session& operator = (const Session& Rhs) = delete;
 
-      void Start();
+      virtual void Start();
 
       asio::ip::tcp::socket& GetSocket();
 
@@ -44,15 +44,13 @@ namespace dl::tcp
 
       Session(asio::io_service& IoService, asio::io_service& CallbackService);
 
-    private:
+      virtual void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
 
-      void OnRead(const asio::error_code& Error, const size_t BytesTransfered);
-
-      void AsyncWrite();
+      virtual void AsyncWrite();
 
       void OnWrite(const asio::error_code&, const size_t BytesTransfered);
 
-    private:
+    protected:
 
       static std::atomic<unsigned long> mCount;
 

@@ -9,9 +9,9 @@ using namespace std;
 //------------------------------------------------------------------------------
 int main()
 {
-  cout << "Client connecting on localhost 8080" << endl;
+  cout << "Client connecting on localhost 8181" << endl;
 
-  dl::tcp::Client Client;
+  dl::tcp::Client<dl::tcp::Session> Client;
 
   Client.GetOnRxSignal().Connect([] (auto Bytes) { cout << Bytes << endl;});
 

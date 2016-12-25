@@ -1,17 +1,55 @@
 #include "Requests.hpp"
+
 #include <Tcp/Client.hpp>
 #include <condition_variable>
+
+using namespace std::literals;
 
 namespace dl::request
 {
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  static std::string GetRequestString(const std::string& Url)
+  static std::pair<std::string, std::string> GetHostnameAndPath(
+    const std::string& Url)
+  {
+    std::pair<std::string, std::string> HostnamePath;
+
+    auto iProtocol = Url.find("://");
+
+    std::string Hostname;
+
+    if (iProtocol == std::string::npos)
+    {
+      Hostname = Url;
+    }
+    else
+    {
+      Hostname = Url.substr(iProtocol + 3) ;
+    }
+
+
+
+    if (auto iPath = Hostname.find("/"); iPath == std::string::npos)
+    {
+      return {Hostname, "/"s};
+    }
+    else
+    {
+      return {Hostname.substr(0, iPath), Hostname.substr(iPath)};
+    }
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  static std::string GetRequestString(
+    const std::string& Hostname,
+    const std::string& Path)
   {
     std::stringstream Request;
 
     Request
-      << "HTTP/1.0\r\nHost: " << Url << "\r\n"
+      << Path << " HTTP/1.1\r\n"
+      << "Host: " << Hostname << "\r\n"
       << "Accept: */*\r\n"
       << "Accept-Encoding: text/plain\r\n"
       << "User-Agent: DanLib/0.0.1\r\n"
@@ -86,7 +124,6 @@ namespace dl::request
             static bool FirstTime = true;
             if (FirstTime)
             {
-              std::cout << "Connected writing data" << std::endl;
               Client.Write(Data);
               FirstTime = false;
             }
@@ -95,6 +132,17 @@ namespace dl::request
         std::unique_lock<std::mutex> Lock(Mutex);
 
         Condition.wait(Lock);
+        //if (Condition.wait_for(Lock, 3s) == std::cv_status::timeout)
+        //{
+        //try
+        //{
+        //throw std::logic_error("Time out");
+        //}
+        //catch (const std::exception& Exception)
+        //{
+        //Promise.set_exception(std::current_exception());
+        //}
+        //}
       });
 
     Thread.detach();
@@ -108,7 +156,9 @@ namespace dl::request
     const std::string& Url,
     const unsigned Port)
   {
-    return MakeRequest(Url, "GET / " + GetRequestString(Url), Port);
+    auto [Hostname, Path] = GetHostnameAndPath(Url);
+
+    return MakeRequest(Hostname, "GET " + GetRequestString(Hostname, Path), Port);
   }
 
   //----------------------------------------------------------------------------
@@ -118,9 +168,11 @@ namespace dl::request
     std::unordered_map<std::string, std::string> Data,
     const unsigned Port)
   {
+    auto [Hostname, Path] = GetHostnameAndPath(Url);
+
     return MakeRequest(
-      Url,
-      "POST / " + GetRequestString(Url) + FormatPostData(Data),
+      Hostname,
+      "POST " + GetRequestString(Hostname, Path) + FormatPostData(Data),
       Port);
   }
 }

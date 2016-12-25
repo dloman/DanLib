@@ -2,6 +2,7 @@
 #include <mutex>
 #include <ostream>
 #include <string>
+#include <vector>
 
 namespace dl::http
 {
@@ -69,7 +70,7 @@ namespace dl::http
 
       void SetStatus(const Status);
 
-      const std::string& GetHeader() const;
+      const std::vector<std::string>& GetHeader() const;
 
       const std::string& GetBody() const;
 
@@ -79,6 +80,8 @@ namespace dl::http
 
       void ParseHeader();
 
+      void ParseContentLength();
+
       bool ParseBody();
 
     private:
@@ -87,7 +90,9 @@ namespace dl::http
 
       Status mStatus;
 
-      std::string mHeader;
+      std::vector<std::string> mHeader;
+
+      size_t mContentLength;
 
       std::string mBody;
 
@@ -97,9 +102,14 @@ namespace dl::http
   inline
   std::ostream& operator<< (std::ostream& Stream, const dl::http::Responce& Responce)
   {
-    Stream
-      << "HTTP/1.1 " << static_cast<int>(Responce.GetStatus()) << '\n'
-      << Responce.GetHeader() << '\n' << Responce.GetBody() << '\n';
+    Stream << "HTTP/1.1 " << static_cast<int>(Responce.GetStatus()) << '\n';
+
+    for (const auto& HeaderLine : Responce.GetHeader())
+    {
+      Stream << HeaderLine << '\n';
+    }
+
+    Stream << Responce.GetBody() << '\n';
 
     return Stream;
   }

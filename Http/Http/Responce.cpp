@@ -1,4 +1,6 @@
 #include "Responce.hpp"
+#include <String/String.hpp>
+#include <algorithm>
 
 using dl::http::Responce;
 
@@ -8,6 +10,7 @@ Responce::Responce()
   : mBytes(),
     mStatus(Status::eUninitialized),
     mHeader(),
+    mContentLength(0),
     mBody(),
     mMutex()
 {
@@ -67,7 +70,7 @@ void Responce::SetStatus(const dl::http::Responce::Status Status)
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const std::string& Responce::GetHeader() const
+const std::vector<std::string>& Responce::GetHeader() const
 {
   return mHeader;
 }
@@ -104,9 +107,34 @@ void Responce::ParseHeader()
 
   if (iLineBreak != std::string::npos)
   {
-    mHeader = mBytes.substr(0, iLineBreak);
+    mHeader = dl::Split(mBytes.substr(0, iLineBreak));
+
+    ParseContentLength();
 
     mBytes = mBytes.substr(iLineBreak + 4);
+  }
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Responce::ParseContentLength()
+{
+  auto iLine = std::find_if(
+    mHeader.begin(),
+    mHeader.end(),
+    [] (const std::string& Line)
+    {
+      return Line.substr(0, 16) == "Content-Length: ";
+    });;
+
+  if (iLine == mHeader.end())
+  {
+    mContentLength = 1;
+    mBytes += ' ';
+  }
+  else
+  {
+    mContentLength = std::atoi(iLine->substr(16).c_str());
   }
 }
 
@@ -115,9 +143,7 @@ void Responce::ParseHeader()
 bool Responce::ParseBody()
 {
   std::lock_guard<std::mutex> Lock(mMutex);
-  auto iLineBreak = mBytes.find("\r\n\r\n");
-
-  if (iLineBreak != std::string::npos)
+  if (mBytes.size() >= mContentLength)
   {
     mBody = std::move(mBytes);
 

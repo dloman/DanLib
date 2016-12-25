@@ -1,5 +1,5 @@
 
-#include <Tcp/SslClient.hpp>
+#include <Tcp/Client.hpp>
 #include <iostream>
 #include <array>
 
@@ -14,7 +14,7 @@ int main()
 
   cout << "Client connecting to example.com" << endl;
 
-  dl::tcp::SslClient Client("example.com", 443);
+  dl::tcp::Client<dl::tcp::SslSession> Client("example.com", 443);
 
   Client.GetOnRxSignal().Connect([] (const auto& Bytes) { cout << "Bytes = " << Bytes << endl;});
 
