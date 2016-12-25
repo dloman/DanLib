@@ -239,6 +239,7 @@ add_library(
 
 target_link_libraries(
   Requests
+  Http
   Tcp
   )
 
@@ -251,7 +252,6 @@ target_link_libraries(
   RequestsTest
   Requests
   Tcp
-  Http
   )
 
 #------------------------------------------------------------------------------
@@ -340,10 +340,12 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 
 install(
 TARGETS
+  Http
   Requests
   Tcp
   Signal
   Serial
+  String
 DESTINATION
   ${DanLib_DIRNAME_lib}
 EXPORT
@@ -399,4 +401,11 @@ install(
     Serial/Serial/Serial.hpp
   DESTINATION
   ${DanLib_DIRNAME_include}/Serial
+  )
+
+install(
+  FILES
+    Utility/String/String.hpp
+  DESTINATION
+  ${DanLib_DIRNAME_include}/String
   )
