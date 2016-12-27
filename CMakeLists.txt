@@ -34,13 +34,37 @@ find_package(OpenSSL REQUIRED)
 
 include_directories(${OPENSSL_INCLUDE_DIR})
 
+set(CMAKE_DEBUG_POSTFIX d)
+
+#------------------------------------------------------------------------------
+# Image
+#------------------------------------------------------------------------------
+
+include_directories(Image)
+
+add_library(
+  Image
+  Image/Image/Image.cpp
+  Image/Image/Image.hpp
+  Image/Image/Bitmap.cpp
+  Image/Image/Bitmap.hpp
+  )
+
+add_executable(
+  BitmapTest
+  Image/Tests/BitmapTest.cpp
+  )
+
+target_link_libraries(
+  BitmapTest
+  Image
+  )
+
 #------------------------------------------------------------------------------
 # Utility
 #------------------------------------------------------------------------------
 
 include_directories(Utility)
-
-set(CMAKE_DEBUG_POSTFIX d)
 
 add_library(
   Math
@@ -341,6 +365,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 install(
 TARGETS
   Http
+  Image
   Requests
   Tcp
   Signal
@@ -372,6 +397,14 @@ install(
     Http/Http/Responce.hpp
   DESTINATION
     ${DanLib_DIRNAME_include}/Http
+  )
+
+install(
+  FILES
+    Image/Image/Image.hpp
+    Image/Image/Bitmap.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/Images
   )
 
 install(
