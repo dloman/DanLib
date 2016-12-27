@@ -64,6 +64,8 @@ namespace dl::tcp
 
       std::deque<std::string> mWriteQueue;
 
+      std::string mWriteBuffer;
+
       static constexpr unsigned mMaxLength = 1024;
 
       std::array<char, mMaxLength> mData;

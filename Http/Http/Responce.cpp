@@ -46,12 +46,7 @@ bool Responce::AddBytes(const std::string& Bytes)
     ParseHeader();
   }
 
-  if (mBody.empty())
-  {
-    return ParseBody();
-  }
-
-  return false;
+  return ParseBody();
 }
 
 //------------------------------------------------------------------------------

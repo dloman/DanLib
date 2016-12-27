@@ -86,7 +86,7 @@ namespace dl::request
     std::thread Thread(
       [Url, Port, Data = std::move(Data), Promise = std::move(Promise)] () mutable
       {
-        dl::tcp::Client Client(Url, Port);
+        dl::tcp::Client Client(Url, Port, 1, 1);
 
         std::mutex Mutex;
 

@@ -58,15 +58,15 @@ void Session::AsyncWrite()
 {
   if (!mWriteQueue.empty())
   {
-    auto Message = mWriteQueue.front();
+    mWriteBuffer = std::move(mWriteQueue.front());
 
     mWriteQueue.pop_front();
 
     asio::async_write(
       mSocket,
-      asio::buffer(Message),
+      asio::buffer(mWriteBuffer),
       mStrand.wrap(
-        [this, pThis = shared_from_this(), Message]
+        [this, pThis = shared_from_this()]
         (const asio::error_code& Error, const size_t BytesTransfered)
         {
           if (!Error)
@@ -78,7 +78,7 @@ void Session::AsyncWrite()
             mCallbackService.post(
               [=]
               {
-                mSignalWriteError(Error, Message);
+                mSignalWriteError(Error, std::move(mWriteBuffer));
               });
           }
         }));
