@@ -46,7 +46,7 @@ namespace dl::crypto
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   template<class T, std::size_t... N>
-  constexpr T EndianSwapImpl(T i, std::index_sequence<N...>)
+  constexpr T EndianSwapImpl(T Value, std::index_sequence<N...>)
   {
     return ((
         ((Value >> (N * CHAR_BIT)) & (T)(unsigned char)(-1)) <<
@@ -133,25 +133,22 @@ namespace dl::crypto
     //------------------------------------------------------------------------
     constexpr uint32_t Pad(int Length)
     {
-      if (Length == 3)
+      switch(Length)
       {
-        return 0x00000080;
-      }
-      else if (Length == 2)
-      {
-        return 0x00008000;
-      }
-      else if (Length == 1)
-      {
-        return 0x00800000;
-      }
-      else if (Length == 0)
-      {
-        return 0x80000000;
-      }
-      else
-      {
-        return 0;
+        case 3:
+          return 0x00000080;
+
+        case 2:
+          return 0x00008000;
+
+        case 1:
+          return 0x00800000;
+
+        case 0:
+          return 0x80000000;
+
+        default:
+          return 0;
       }
     }
 
