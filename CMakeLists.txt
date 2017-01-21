@@ -37,6 +37,30 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 set(CMAKE_DEBUG_POSTFIX d)
 
 #------------------------------------------------------------------------------
+# Crypto
+#------------------------------------------------------------------------------
+
+include_directories(Crypto)
+
+
+add_library(
+  Crypto
+  Crypto/Crypto/Sha.hpp
+  )
+
+set_target_properties(Crypto PROPERTIES LINKER_LANGUAGE CXX)
+
+add_executable(
+  CryptoTest
+  Crypto/Tests/ShaTest.cpp
+  )
+
+target_link_libraries(
+  CryptoTest
+  Crypto
+  )
+
+#------------------------------------------------------------------------------
 # Image
 #------------------------------------------------------------------------------
 
