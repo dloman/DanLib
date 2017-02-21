@@ -185,6 +185,31 @@ target_link_libraries(
   )
 
 #------------------------------------------------------------------------------
+# Udp
+#------------------------------------------------------------------------------
+
+include_directories(Udp)
+
+add_library(
+  Udp
+  Udp/Udp/Server.cpp
+  Udp/Udp/Server.hpp
+  Udp/Udp/Session.cpp
+  Udp/Udp/Session.hpp
+  )
+
+add_executable(
+  UdpEcho
+  Udp/Test/UdpEchoServer.cpp
+  )
+
+target_link_libraries(
+  UdpEcho
+  Udp
+  ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+#------------------------------------------------------------------------------
 # Http
 #------------------------------------------------------------------------------
 
