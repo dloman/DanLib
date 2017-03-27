@@ -56,6 +56,13 @@ namespace dl::http
         eUninitialized = -1
       };
 
+      static dl::http::Responce Error();
+
+      static dl::http::Responce GenerateResponce(
+        const Status status,
+        const std::string& ContentType,
+        const std::string& Body);
+
       Responce();
 
       ~Responce() = default;
@@ -72,7 +79,13 @@ namespace dl::http
 
       const std::vector<std::string>& GetHeader() const;
 
+      void SetHeader(const std::vector<std::string>&& Header);
+
       const std::string& GetBody() const;
+
+      void SetBody(const std::string& Body);
+
+      std::string ToBytes() const;
 
     private:
 

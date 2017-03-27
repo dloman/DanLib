@@ -219,10 +219,15 @@ add_library(
   Http
   Http/Http/Responce.cpp
   Http/Http/Responce.hpp
+  Http/Http/Request.cpp
+  Http/Http/Request.hpp
+  Http/Http/Server.cpp
+  Http/Http/Server.hpp
   )
 
 target_link_libraries(
   Http
+  Tcp
   String
   )
 
@@ -233,6 +238,17 @@ add_executable(
 
 target_link_libraries(
   HttpServerTest
+  String
+  Http
+  )
+
+add_executable(
+  WebSocketServerTest
+  Http/Utilities/WebsocketServer.cpp
+  )
+
+target_link_libraries(
+  WebSocketServerTest
   String
   Tcp
   )
@@ -396,6 +412,7 @@ TARGETS
   Signal
   Serial
   String
+  Udp
 DESTINATION
   ${DanLib_DIRNAME_lib}
 EXPORT
@@ -459,6 +476,13 @@ install(
     Serial/Serial/Serial.hpp
   DESTINATION
   ${DanLib_DIRNAME_include}/Serial
+  )
+
+install(
+  FILES
+  Udp/Udp/Server.hpp
+  DESTINATION
+  ${DanLib_DIRNAME_include}/Udp
   )
 
 install(

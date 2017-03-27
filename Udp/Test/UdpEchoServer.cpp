@@ -28,7 +28,10 @@ int main()
     {
       std::cout << "rx = " << Bytes << " from " << IpAddress << std::endl;
 
-      Server.Write(Bytes, IpAddress);
+      //if (asio::ip::address_v4::loopback() != IpAddress)
+      //{
+      //Server.Write(Bytes, IpAddress);
+      //}
     });
 
   std::unique_lock<std::mutex> Lock(gMutex);

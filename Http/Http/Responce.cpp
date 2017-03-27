@@ -1,8 +1,50 @@
 #include "Responce.hpp"
 #include <String/String.hpp>
 #include <algorithm>
+#include <ctime>
+#include <iomanip>
+#include <numeric>
 
+#include <iostream>
 using dl::http::Responce;
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+dl::http::Responce Responce::GenerateResponce(
+  const Status status,
+  const std::string& ContentType,
+  const std::string& Body)
+{
+  dl::http::Responce Responce;
+
+  std::time_t t = std::time(nullptr);
+  std::stringstream Time;
+
+  Time << "Date: " << std::put_time(std::gmtime(&t), "%c, %Z") << "\r\n";
+
+  Responce.SetHeader({
+    {"HTTP/1.1 " + std::to_string(static_cast<int> (status)) +" \r\n"},
+    {Time.str()},
+    {"Server: Apache/2.2.14 (Win32)\r\n"},
+    {"Last-Modified: Sat, 20 Nov 2004 07:16:26 GMT\r\n"},
+    {"ETag: \"10000000565a5-2c-3e94b66c2e680\"\r\n"},
+    {"Accept-Ranges: bytes\r\n"},
+    {"Content-Length: " + std::to_string(Body.size()) + "\r\n"},
+    {"Connection: close\r\n"},
+    {"Content-Type: " + ContentType + "\r\n"},
+    {"X-Pad: avoid browser bug\r\n\r\n"}});
+
+  Responce.SetBody(Body);
+
+  return Responce;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+dl::http::Responce Responce::Error()
+{
+  return GenerateResponce(Status::eParsingError, "text/html", "error");
+}
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -145,4 +187,29 @@ bool Responce::ParseBody()
     return true;
   }
   return false;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Responce::SetBody(const std::string& Body)
+{
+  mBody = Body;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Responce::SetHeader(const std::vector<std::string>&& Header)
+{
+  mHeader = std::move(Header);
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+std::string Responce::ToBytes() const
+{
+  std::string Responce;
+
+  Responce = std::accumulate(mHeader.begin(), mHeader.end(), Responce);
+
+  return Responce + mBody;
 }
