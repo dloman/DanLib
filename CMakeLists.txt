@@ -1,4 +1,7 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+
+SET(CMAKE_C_COMPILER /usr/local/bin/gcc)
+SET(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 
 PROJECT(DanLib)
 set(MODULE_NAME DanLib)
@@ -7,11 +10,11 @@ add_definitions(-DMODULE_NAME=\"DanLib\")
 ADD_DEFINITIONS(-Wall)
 ADD_DEFINITIONS(-fPIC)
 
-set(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 
 SET(DanLib_VERSION_MAJOR 0)
 SET(DanLib_VERSION_MINOR 1)
 
+ADD_DEFINITIONS(-std=c++1z)
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++1z" COMPILER_SUPPORTS_CXX17)
 if(COMPILER_SUPPORTS_CXX17)
@@ -249,8 +252,7 @@ add_executable(
 
 target_link_libraries(
   WebSocketServerTest
-  String
-  Tcp
+  Http
   )
 
 add_executable(
