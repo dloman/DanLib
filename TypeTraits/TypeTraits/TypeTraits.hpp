@@ -7,12 +7,8 @@ namespace dl
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   template <typename T, typename ... Args>
-  constexpr bool ContainsType(std::tuple<Args...>)
+  constexpr bool ContainsType(std::tuple<Args...> t)
   {
-    return !std::is_same_v
-    <
-      std::integer_sequence<bool, false, std::is_same_v<T, Args>...>,
-      std::integer_sequence<bool, std::is_same_v<T, Args>..., false>
-    >;
+    return std::disjunction_v<std::is_same<T, Args>...>;
   }
 }
