@@ -372,6 +372,16 @@ target_link_libraries(
   )
 
 #------------------------------------------------------------------------------
+# Type Traits
+#------------------------------------------------------------------------------
+include_directories(TypeTraits)
+
+add_executable(
+  TypeTraits
+  TypeTraits/Tests/TypeTraitsTest.cpp
+  )
+
+#------------------------------------------------------------------------------
 # Install
 #------------------------------------------------------------------------------
 set(DanLib_VERSION_STRING "${DanLib_VERSION_MAJOR}.${DanLib_VERSION_MINOR}")
@@ -491,5 +501,14 @@ install(
   FILES
     Utility/String/String.hpp
   DESTINATION
-  ${DanLib_DIRNAME_include}/String
+    ${DanLib_DIRNAME_include}/String
   )
+
+install(
+  FILES
+    TypeTraits/TypeTraits/TypeTraits.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/TypeTraits
+  )
+
+
