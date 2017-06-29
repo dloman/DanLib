@@ -4,6 +4,11 @@
 
 int main()
 {
+
+  static_assert(
+    dl::ContainsType<int>(std::tuple<double, char, int, unsigned>{}),
+    "ContainsType didnt work");
+
   std::cout <<
     std::boolalpha <<
     dl::ContainsType<int>(std::tuple<double, char, int, unsigned>{})
