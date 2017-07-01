@@ -118,6 +118,11 @@ target_link_libraries(
   String
   )
 
+add_executable(
+  RandomTest
+  Utility/Test/RandomTest.cpp
+  )
+
 #------------------------------------------------------------------------------
 # Tcp
 #------------------------------------------------------------------------------
@@ -477,6 +482,13 @@ install(
 
 install(
   FILES
+    Utility/Random/Random.hpp
+  DESTINATION
+    ${DanLib_DIRNAME_include}/Random
+  )
+
+install(
+  FILES
     Tcp/Tcp/Server.hpp
     Tcp/Tcp/Session.hpp
   DESTINATION
@@ -510,5 +522,3 @@ install(
   DESTINATION
     ${DanLib_DIRNAME_include}/TypeTraits
   )
-
-
