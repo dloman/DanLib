@@ -1,6 +1,7 @@
 #pragma once
+#include <experimental/memory>
 #include <memory>
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 
 namespace dl::image
@@ -14,12 +15,12 @@ namespace dl::image
       Image(
         const size_t Width,
         const size_t Height,
-        std::unique_ptr<std::uint8_t[]>&& Bytes,
+        std::unique_ptr<std::byte[]>&& Bytes,
         const size_t NumberOfChannels = 3);
 
-      const std::uint8_t* GetData() const;
+      const std::experimental::observer_ptr<std::byte> GetData() const;
 
-      std::uint8_t* GetData();
+      std::experimental::observer_ptr<std::byte> GetData();
 
       size_t GetWidth() const;
 
@@ -32,27 +33,27 @@ namespace dl::image
       void SetPixel(
         const size_t X,
         const size_t Y,
-        const std::vector<uint8_t>& Color);
+        const std::vector<std::byte>& Color);
 
       void DrawCircle(
         const int X,
         const int Y,
         const int Radius,
-        const std::vector<uint8_t>& Color);
+        const std::vector<std::byte>& Color);
 
       void DrawLine(
         int X1,
         int Y1,
         int X2,
         int Y2,
-        const std::vector<uint8_t>& Color);
+        const std::vector<std::byte>& Color);
 
       void DrawLine(
         int X1,
         int Y1,
         int X2,
         int Y2,
-        const std::vector<uint8_t>& Color,
+        const std::vector<std::byte>& Color,
         size_t Thickness);
 
     private:
@@ -63,6 +64,6 @@ namespace dl::image
 
       const size_t mNumberOfChannels;
 
-      std::unique_ptr<std::uint8_t[]> mpData;
+      std::unique_ptr<std::byte[]> mpData;
   };
 }

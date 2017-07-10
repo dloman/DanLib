@@ -18,7 +18,7 @@ Image::Image(const size_t Width, const size_t Height, const size_t NumberOfChann
   : mWidth(Width),
     mHeight(Height),
     mNumberOfChannels(NumberOfChannels),
-    mpData(std::make_unique<std::uint8_t[]>(Width * Height * NumberOfChannels))
+    mpData(std::make_unique<std::byte[]>(Width * Height * NumberOfChannels))
 {
 }
 
@@ -27,7 +27,7 @@ Image::Image(const size_t Width, const size_t Height, const size_t NumberOfChann
 Image::Image(
   const size_t Width,
   const size_t Height,
-  std::unique_ptr<std::uint8_t[]>&& pData,
+  std::unique_ptr<std::byte[]>&& pData,
   const size_t NumberOfChannels)
   : mWidth(Width),
     mHeight(Height),
@@ -38,16 +38,16 @@ Image::Image(
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const std::uint8_t* Image::GetData() const
+const std::experimental::observer_ptr<std::byte> Image::GetData() const
 {
-  return mpData.get();
+  return std::experimental::make_observer(mpData.get());
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-std::uint8_t* Image::GetData()
+std::experimental::observer_ptr<std::byte> Image::GetData()
 {
-  return mpData.get();
+  return std::experimental::make_observer(mpData.get());
 }
 
 //------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ size_t Image::GetNumberOfChannels() const
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Image::SetPixel(size_t X, size_t Y, const std::vector<uint8_t>& Color)
+void Image::SetPixel(size_t X, size_t Y, const std::vector<std::byte>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -104,7 +104,7 @@ void Image::DrawCircle(
   int X,
   int Y,
   int Radius,
-  const std::vector<uint8_t>& Color)
+  const std::vector<std::byte>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -130,7 +130,7 @@ void Image::DrawLine(
   int Y1,
   int X2,
   int Y2,
-  const std::vector<uint8_t>& Color)
+  const std::vector<std::byte>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -162,7 +162,7 @@ void Image::DrawLine(
   int Y1,
   int X2,
   int Y2,
-  const std::vector<uint8_t>& Color,
+  const std::vector<std::byte>& Color,
   size_t Thickness)
 {
   double LineDistance = Distance(X1, Y1, X2, Y2);

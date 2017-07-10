@@ -455,7 +455,7 @@ install(
   FILES
     Http/Http/Responce.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Http
+    ${DanLib_DIRNAME_include}/DanLib/Http
   )
 
 install(
@@ -463,28 +463,28 @@ install(
     Image/Image/Image.hpp
     Image/Image/Bitmap.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Images
+    ${DanLib_DIRNAME_include}/DanLib/Images
   )
 
 install(
   FILES
     Requests/Requests/Requests.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Requests
+    ${DanLib_DIRNAME_include}/DanLib/Requests
   )
 
 install(
   FILES
     Utility/Signal/Signal.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Signal
+    ${DanLib_DIRNAME_include}/DanLib/Signal
   )
 
 install(
   FILES
     Utility/Random/Random.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Random
+    ${DanLib_DIRNAME_include}/DanLib/Random
   )
 
 install(
@@ -492,21 +492,21 @@ install(
     Tcp/Tcp/Server.hpp
     Tcp/Tcp/Session.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/Tcp
+    ${DanLib_DIRNAME_include}/DanLib/Tcp
   )
 
 install(
   FILES
     Serial/Serial/Serial.hpp
   DESTINATION
-  ${DanLib_DIRNAME_include}/Serial
+    ${DanLib_DIRNAME_include}/DanLib/Serial
   )
 
 install(
   FILES
   Udp/Udp/Server.hpp
   DESTINATION
-  ${DanLib_DIRNAME_include}/Udp
+    ${DanLib_DIRNAME_include}/DanLib/Udp
   )
 
 install(

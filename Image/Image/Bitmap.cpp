@@ -9,17 +9,17 @@ namespace dl::image
 {
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  static std::vector<uint8_t> GeneratePixelData(
+  static std::vector<std::byte> GeneratePixelData(
     const dl::image::Image& Image)
   {
     auto GetPixel =
       [pData = Image.GetData(), Width = Image.GetWidth(), Bitdepth = Image.GetNumberOfChannels()]
       (const size_t x, const size_t y)
       {
-        return pData + (y * Width * Bitdepth) + (x * Bitdepth);
+        return pData.get() + (y * Width * Bitdepth) + (x * Bitdepth);
       };
 
-    std::vector<uint8_t> Data;
+    std::vector<std::byte> Data;
 
     for (size_t y = Image.GetHeight(); y > 0; --y)
     {
@@ -36,7 +36,7 @@ namespace dl::image
       //Pad to each row to be multiple of 4
       while (Data.size() % 4)
       {
-        Data.emplace_back(0u);
+        Data.emplace_back(static_cast<std::byte>(0));
       }
     }
 
