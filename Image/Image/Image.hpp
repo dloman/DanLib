@@ -10,6 +10,8 @@ namespace dl::image
   {
     public:
 
+      Image();
+
       Image(const size_t Width, const size_t Height, const size_t NumberOfChannels = 3);
 
       Image(
@@ -18,9 +20,19 @@ namespace dl::image
         std::unique_ptr<std::byte[]>&& Bytes,
         const size_t NumberOfChannels = 3);
 
+      Image(const Image& image);
+
+      Image& operator = (const Image& Rhs);
+
       const std::experimental::observer_ptr<std::byte> GetData() const;
 
       std::experimental::observer_ptr<std::byte> GetData();
+
+      void Set(
+        const size_t width,
+        const size_t height,
+        std::unique_ptr<std::byte[]>&& pData,
+        const size_t numberOfChannels);
 
       size_t GetWidth() const;
 
@@ -58,11 +70,11 @@ namespace dl::image
 
     private:
 
-      const size_t mWidth;
+      size_t mWidth;
 
-      const size_t mHeight;
+      size_t mHeight;
 
-      const size_t mNumberOfChannels;
+      size_t mNumberOfChannels;
 
       std::unique_ptr<std::byte[]> mpData;
   };

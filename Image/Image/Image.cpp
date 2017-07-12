@@ -1,5 +1,6 @@
 #include "Image.hpp"
 #include <cmath>
+#include <cstring>
 
 using dl::image::Image;
 
@@ -10,6 +11,16 @@ double Distance(double X1, double Y1, double X2, double Y2)
   auto DistanceX = X1 - X2;
   auto DistanceY = Y1 - Y2;
   return std::sqrt((DistanceX * DistanceX) + (DistanceY * DistanceY));
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image::Image()
+  : mWidth(0.0),
+    mHeight(0.0),
+    mNumberOfChannels(0.0),
+    mpData(nullptr)
+{
 }
 
 //------------------------------------------------------------------------------
@@ -34,6 +45,52 @@ Image::Image(
     mNumberOfChannels(NumberOfChannels),
     mpData(std::move(pData))
 {
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image::Image(const Image& image)
+  : mWidth(image.mWidth),
+    mHeight(image.mHeight),
+    mNumberOfChannels(image.mNumberOfChannels),
+    mpData(std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels))
+{
+  std::memcpy(mpData.get(), image.mpData.get(), mWidth * mHeight * mNumberOfChannels);
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image& Image::operator = (const Image& Rhs)
+{
+
+  mWidth = Rhs.mWidth;
+
+  mHeight = Rhs.mHeight;
+
+  mNumberOfChannels = Rhs.mNumberOfChannels;
+
+  mpData = std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels);
+
+  memcpy(mpData.get(), Rhs.mpData.get(), mWidth * mHeight * mNumberOfChannels);
+
+  return *this;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+void Image::Set(
+  const size_t width,
+  const size_t height,
+  std::unique_ptr<std::byte[]>&& pData,
+  const size_t numberOfChannels)
+{
+  mWidth = width;
+
+  mHeight = height;
+
+  mpData = std::move(pData);
+
+  mNumberOfChannels = numberOfChannels;
 }
 
 //------------------------------------------------------------------------------
