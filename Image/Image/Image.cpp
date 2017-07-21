@@ -19,6 +19,7 @@ Image::Image()
   : mWidth(0.0),
     mHeight(0.0),
     mNumberOfChannels(0.0),
+    mpOwnedData(nullptr),
     mpData(nullptr)
 {
 }
@@ -29,7 +30,8 @@ Image::Image(const size_t Width, const size_t Height, const size_t NumberOfChann
   : mWidth(Width),
     mHeight(Height),
     mNumberOfChannels(NumberOfChannels),
-    mpData(std::make_unique<std::byte[]>(Width * Height * NumberOfChannels))
+    mpOwnedData(std::make_unique<std::byte[]>(Width * Height * NumberOfChannels)),
+    mpData(std::experimental::make_observer(mpOwnedData.get()))
 {
 }
 
@@ -43,7 +45,23 @@ Image::Image(
   : mWidth(Width),
     mHeight(Height),
     mNumberOfChannels(NumberOfChannels),
-    mpData(std::move(pData))
+    mpOwnedData(std::move(pData)),
+    mpData(mpOwnedData.get())
+{
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image::Image(
+  const size_t Width,
+  const size_t Height,
+  std::experimental::observer_ptr<std::byte> pBytes,
+  const size_t NumberOfChannels)
+  : mWidth(Width),
+    mHeight(Height),
+    mNumberOfChannels(NumberOfChannels),
+    mpOwnedData(nullptr),
+    mpData(pBytes)
 {
 }
 
@@ -53,7 +71,8 @@ Image::Image(const Image& image)
   : mWidth(image.mWidth),
     mHeight(image.mHeight),
     mNumberOfChannels(image.mNumberOfChannels),
-    mpData(std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels))
+    mpOwnedData(std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels)),
+    mpData(mpData.get())
 {
   std::memcpy(mpData.get(), image.mpData.get(), mWidth * mHeight * mNumberOfChannels);
 }
@@ -69,7 +88,9 @@ Image& Image::operator = (const Image& Rhs)
 
   mNumberOfChannels = Rhs.mNumberOfChannels;
 
-  mpData = std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels);
+  mpOwnedData = std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels);
+
+  mpData = std::experimental::make_observer(mpOwnedData.get());
 
   memcpy(mpData.get(), Rhs.mpData.get(), mWidth * mHeight * mNumberOfChannels);
 
@@ -88,7 +109,9 @@ void Image::Set(
 
   mHeight = height;
 
-  mpData = std::move(pData);
+  mpOwnedData = std::move(pData);
+
+  mpData = std::experimental::make_observer(mpOwnedData.get());
 
   mNumberOfChannels = numberOfChannels;
 }
@@ -97,14 +120,14 @@ void Image::Set(
 //------------------------------------------------------------------------------
 const std::experimental::observer_ptr<std::byte> Image::GetData() const
 {
-  return std::experimental::make_observer(mpData.get());
+  return mpData;
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 std::experimental::observer_ptr<std::byte> Image::GetData()
 {
-  return std::experimental::make_observer(mpData.get());
+  return mpData;
 }
 
 //------------------------------------------------------------------------------

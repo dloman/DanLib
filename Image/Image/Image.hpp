@@ -20,6 +20,12 @@ namespace dl::image
         std::unique_ptr<std::byte[]>&& Bytes,
         const size_t NumberOfChannels = 3);
 
+      Image(
+        const size_t Width,
+        const size_t Height,
+        std::experimental::observer_ptr<std::byte> Bytes,
+        const size_t NumberOfChannels = 3);
+
       Image(const Image& image);
 
       Image& operator = (const Image& Rhs);
@@ -76,6 +82,8 @@ namespace dl::image
 
       size_t mNumberOfChannels;
 
-      std::unique_ptr<std::byte[]> mpData;
+      std::unique_ptr<std::byte[]> mpOwnedData;
+
+      std::experimental::observer_ptr<std::byte> mpData;
   };
 }
