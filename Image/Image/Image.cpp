@@ -72,31 +72,66 @@ Image::Image(const Image& image)
     mHeight(image.mHeight),
     mNumberOfChannels(image.mNumberOfChannels),
     mpOwnedData(std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels)),
-    mpData(mpData.get())
+    mpData(mpOwnedData.get())
 {
   std::memcpy(mpData.get(), image.mpData.get(), mWidth * mHeight * mNumberOfChannels);
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Image& Image::operator = (const Image& Rhs)
+Image& Image::operator = (const Image& rhs)
 {
 
-  mWidth = Rhs.mWidth;
+  mWidth = rhs.mWidth;
 
-  mHeight = Rhs.mHeight;
+  mHeight = rhs.mHeight;
 
-  mNumberOfChannels = Rhs.mNumberOfChannels;
+  mNumberOfChannels = rhs.mNumberOfChannels;
 
   mpOwnedData = std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels);
 
   mpData = std::experimental::make_observer(mpOwnedData.get());
 
-  memcpy(mpData.get(), Rhs.mpData.get(), mWidth * mHeight * mNumberOfChannels);
+  memcpy(mpData.get(), rhs.mpData.get(), mWidth * mHeight * mNumberOfChannels);
 
   return *this;
 }
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image::Image(Image&& image)
+  : mWidth(image.mWidth),
+    mHeight(image.mHeight),
+    mNumberOfChannels(image.mNumberOfChannels),
+    mpOwnedData(std::move(image.mpOwnedData)),
+    mpData(std::move(image.mpData))
+{
+  image.mWidth = 0;
+  image.mHeight = 0;
+  image.mNumberOfChannels = 0;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+Image& Image::operator = (Image&& rhs)
+{
+
+  mWidth = rhs.mWidth;
+
+  mHeight = rhs.mHeight;
+
+  mNumberOfChannels = rhs.mNumberOfChannels;
+
+  mpOwnedData = std::move(rhs.mpOwnedData);
+
+  mpData = std::move(rhs.mpData);
+
+  rhs.mWidth = 0;
+  rhs.mHeight = 0;
+  rhs.mNumberOfChannels = 0;
+
+  return *this;
+}
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 void Image::Set(

@@ -30,6 +30,10 @@ namespace dl::image
 
       Image& operator = (const Image& Rhs);
 
+      Image(Image&& image);
+
+      Image& operator = (Image&& Rhs);
+
       const std::experimental::observer_ptr<std::byte> GetData() const;
 
       std::experimental::observer_ptr<std::byte> GetData();
