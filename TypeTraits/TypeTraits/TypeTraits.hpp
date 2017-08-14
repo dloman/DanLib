@@ -27,8 +27,8 @@ namespace dl
 
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
-  template <typename T, typename ... Ts, typename... Args>
-  struct ContainsType<T, std::tuple<std::tuple<Ts...>, Args...>>
+  template <typename T, template<typename> class U, typename ... Ts, typename... Args>
+  struct ContainsType<T, std::tuple<U<Ts...>, Args...>>
   : ContainsType<T, std::tuple<Ts..., Args...>>
   {
   };
