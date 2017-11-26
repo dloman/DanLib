@@ -55,27 +55,27 @@ namespace dl::image
       void SetPixel(
         const size_t X,
         const size_t Y,
-        const std::vector<std::byte>& Color);
+        const std::vector<std::uint8_t>& Color);
 
       void DrawCircle(
         const int X,
         const int Y,
         const int Radius,
-        const std::vector<std::byte>& Color);
+        const std::vector<std::uint8_t>& Color);
 
       void DrawLine(
         int X1,
         int Y1,
         int X2,
         int Y2,
-        const std::vector<std::byte>& Color);
+        const std::vector<std::uint8_t>& Color);
 
       void DrawLine(
         int X1,
         int Y1,
         int X2,
         int Y2,
-        const std::vector<std::byte>& Color,
+        const std::vector<std::uint8_t>& Color,
         size_t Thickness);
 
     private:

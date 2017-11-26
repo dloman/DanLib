@@ -11,11 +11,11 @@ int main()
   {
     if (i < 200)
     {
-      Image.SetPixel(i, i, {std::byte{0}, std::byte{0}, std::byte{0}});
+      Image.SetPixel(i, i, {0, 0, 0});
     }
     else
     {
-      Image.SetPixel(i, i, {std::byte{255}, std::byte{255}, std::byte{255}});
+      Image.SetPixel(i, i, {255, 255, 155});
     }
   }
 

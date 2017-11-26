@@ -195,7 +195,7 @@ size_t Image::GetNumberOfChannels() const
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-void Image::SetPixel(size_t X, size_t Y, const std::vector<std::byte>& Color)
+void Image::SetPixel(size_t X, size_t Y, const std::vector<std::uint8_t>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -207,9 +207,9 @@ void Image::SetPixel(size_t X, size_t Y, const std::vector<std::byte>& Color)
     auto pData =
       mpData.get() + (mWidth * Y * mNumberOfChannels) + (X * mNumberOfChannels);
 
-    *pData = Color[0];
-    *(pData + 1) = Color[1];
-    *(pData + 2) = Color[2];
+    *pData = static_cast<std::byte>(Color[0]);
+    *(pData + 1) = static_cast<std::byte>(Color[1]);
+    *(pData + 2) = static_cast<std::byte>(Color[2]);
   }
 }
 
@@ -219,7 +219,7 @@ void Image::DrawCircle(
   int X,
   int Y,
   int Radius,
-  const std::vector<std::byte>& Color)
+  const std::vector<std::uint8_t>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -245,7 +245,7 @@ void Image::DrawLine(
   int Y1,
   int X2,
   int Y2,
-  const std::vector<std::byte>& Color)
+  const std::vector<std::uint8_t>& Color)
 {
   if (Color.size() != mNumberOfChannels)
   {
@@ -277,7 +277,7 @@ void Image::DrawLine(
   int Y1,
   int X2,
   int Y2,
-  const std::vector<std::byte>& Color,
+  const std::vector<std::uint8_t>& Color,
   size_t Thickness)
 {
   double LineDistance = Distance(X1, Y1, X2, Y2);
