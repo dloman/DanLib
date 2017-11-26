@@ -10,5 +10,6 @@ SET(DanLib_INCLUDE_DIRS ${DanLib_INCLUDE_DIR} )
 
 SET(
   DanLib_LIBRARIES
+  Image
   TcpServer
   Signal)
