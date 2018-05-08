@@ -6,25 +6,37 @@
 
 namespace dl::image
 {
+  enum class ColorSpace
+  {
+    eRGB,
+    eYUV
+  };
+
   class Image
   {
     public:
 
       Image();
 
-      Image(const size_t Width, const size_t Height, const size_t NumberOfChannels = 3);
+      Image(
+        size_t Width,
+        size_t Height,
+        ColorSpace colorSpace = ColorSpace::eRGB,
+        size_t NumberOfChannels = 3);
 
       Image(
-        const size_t Width,
-        const size_t Height,
+        size_t Width,
+        size_t Height,
         std::unique_ptr<std::byte[]>&& Bytes,
-        const size_t NumberOfChannels = 3);
+        ColorSpace colorSpace = ColorSpace::eRGB,
+        size_t NumberOfChannels = 3);
 
       Image(
-        const size_t Width,
-        const size_t Height,
+        size_t Width,
+        size_t Height,
         std::experimental::observer_ptr<std::byte> Bytes,
-        const size_t NumberOfChannels = 3);
+        ColorSpace colorSpace = ColorSpace::eRGB,
+        size_t NumberOfChannels = 3);
 
       Image(const Image& image);
 
@@ -34,9 +46,11 @@ namespace dl::image
 
       Image& operator = (Image&& Rhs);
 
-      const std::experimental::observer_ptr<std::byte> GetData() const;
+      ~Image();
 
-      std::experimental::observer_ptr<std::byte> GetData();
+      std::experimental::observer_ptr<const std::byte> GetData() const;
+
+      std::experimental::observer_ptr<std::byte> GetMutableData();
 
       void Set(
         const size_t width,
@@ -78,11 +92,17 @@ namespace dl::image
         const std::vector<std::uint8_t>& Color,
         size_t Thickness);
 
+      ColorSpace GetColorSpace() const;
+
+      void SetColorSpace(ColorSpace colorspace);
+
     private:
 
       size_t mWidth;
 
       size_t mHeight;
+
+      ColorSpace mColorSpace;
 
       size_t mNumberOfChannels;
 
@@ -90,4 +110,20 @@ namespace dl::image
 
       std::experimental::observer_ptr<std::byte> mpData;
   };
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  ColorSpace Image::GetColorSpace() const
+  {
+    return mColorSpace;
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  void Image::SetColorSpace(ColorSpace colorSpace)
+  {
+    mColorSpace = colorSpace;
+  }
 }

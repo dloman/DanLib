@@ -1,5 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
+#fixes wierd library shortname isssue
+CMAKE_POLICY( SET CMP0060 NEW )
+
 SET(CMAKE_C_COMPILER /usr/local/bin/gcc)
 SET(CMAKE_CXX_COMPILER /usr/local/bin/g++)
 

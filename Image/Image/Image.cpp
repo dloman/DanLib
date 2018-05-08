@@ -18,6 +18,7 @@ double Distance(double X1, double Y1, double X2, double Y2)
 Image::Image()
   : mWidth(0.0),
     mHeight(0.0),
+    mColorSpace(ColorSpace::eRGB),
     mNumberOfChannels(0.0),
     mpOwnedData(nullptr),
     mpData(nullptr)
@@ -26,9 +27,14 @@ Image::Image()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Image::Image(const size_t Width, const size_t Height, const size_t NumberOfChannels)
+Image::Image(
+  size_t Width,
+  size_t Height,
+  ColorSpace colorSpace,
+  size_t NumberOfChannels)
   : mWidth(Width),
     mHeight(Height),
+    mColorSpace(ColorSpace::eRGB),
     mNumberOfChannels(NumberOfChannels),
     mpOwnedData(std::make_unique<std::byte[]>(Width * Height * NumberOfChannels)),
     mpData(std::experimental::make_observer(mpOwnedData.get()))
@@ -38,10 +44,11 @@ Image::Image(const size_t Width, const size_t Height, const size_t NumberOfChann
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 Image::Image(
-  const size_t Width,
-  const size_t Height,
+  size_t Width,
+  size_t Height,
   std::unique_ptr<std::byte[]>&& pData,
-  const size_t NumberOfChannels)
+  ColorSpace colorSpace,
+  size_t NumberOfChannels)
   : mWidth(Width),
     mHeight(Height),
     mNumberOfChannels(NumberOfChannels),
@@ -53,12 +60,14 @@ Image::Image(
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 Image::Image(
-  const size_t Width,
-  const size_t Height,
+  size_t Width,
+  size_t Height,
   std::experimental::observer_ptr<std::byte> pBytes,
-  const size_t NumberOfChannels)
+  ColorSpace colorSpace,
+  size_t NumberOfChannels)
   : mWidth(Width),
     mHeight(Height),
+    mColorSpace(colorSpace),
     mNumberOfChannels(NumberOfChannels),
     mpOwnedData(nullptr),
     mpData(pBytes)
@@ -67,9 +76,16 @@ Image::Image(
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+Image::~Image()
+{
+  volatile int a =6;
+}
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 Image::Image(const Image& image)
   : mWidth(image.mWidth),
     mHeight(image.mHeight),
+    mColorSpace(image.mColorSpace),
     mNumberOfChannels(image.mNumberOfChannels),
     mpOwnedData(std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels)),
     mpData(mpOwnedData.get())
@@ -88,6 +104,8 @@ Image& Image::operator = (const Image& rhs)
 
   mNumberOfChannels = rhs.mNumberOfChannels;
 
+  mColorSpace = rhs.mColorSpace;
+
   mpOwnedData = std::make_unique<std::byte[]>(mWidth * mHeight * mNumberOfChannels);
 
   mpData = std::experimental::make_observer(mpOwnedData.get());
@@ -102,6 +120,7 @@ Image& Image::operator = (const Image& rhs)
 Image::Image(Image&& image)
   : mWidth(image.mWidth),
     mHeight(image.mHeight),
+    mColorSpace(image.mColorSpace),
     mNumberOfChannels(image.mNumberOfChannels),
     mpOwnedData(std::move(image.mpOwnedData)),
     mpData(std::move(image.mpData))
@@ -153,14 +172,14 @@ void Image::Set(
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-const std::experimental::observer_ptr<std::byte> Image::GetData() const
+std::experimental::observer_ptr<const std::byte> Image::GetData() const
 {
   return mpData;
 }
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-std::experimental::observer_ptr<std::byte> Image::GetData()
+std::experimental::observer_ptr<std::byte> Image::GetMutableData()
 {
   return mpData;
 }
@@ -300,4 +319,3 @@ void Image::DrawLine(
     DrawLine(X1 + (Rise * j), Y1 + (Run * j), X2 + (Rise * j), Y2 + (Run * j), Color);
     DrawLine(X1 - (Rise * j), Y1 - (Run * j), X2 - (Rise * j), Y2 - (Run * j), Color);
   }
-}
