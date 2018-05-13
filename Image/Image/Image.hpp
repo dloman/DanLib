@@ -46,8 +46,6 @@ namespace dl::image
 
       Image& operator = (Image&& Rhs);
 
-      ~Image();
-
       std::experimental::observer_ptr<const std::byte> GetData() const;
 
       std::experimental::observer_ptr<std::byte> GetMutableData();
