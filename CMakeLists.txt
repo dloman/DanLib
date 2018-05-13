@@ -29,9 +29,14 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(Threads)
 
+#TODO move to boost asio vs standalone
+
 find_package(asio REQUIRED)
 
 include_directories(${asio_INCLUDE_DIR})
+
+find_package(Boost REQUIRED COMPONENTS system)
+include_directories(${Boost_INCLUDE_DIR})
 
 find_package(OpenSSL REQUIRED)
 
@@ -251,16 +256,6 @@ target_link_libraries(
   )
 
 add_executable(
-  WebSocketServerTest
-  Http/Utilities/WebsocketServer.cpp
-  )
-
-target_link_libraries(
-  WebSocketServerTest
-  Http
-  )
-
-add_executable(
   HttpClientTest
   Http/Utilities/HttpClient.cpp
   )
@@ -270,6 +265,46 @@ target_link_libraries(
   Tcp
   )
 
+#------------------------------------------------------------------------------
+# Websockets
+#------------------------------------------------------------------------------
+include_directories(Websockets)
+
+add_library(
+  DanLibWebsockets
+  Websockets/Websockets/Server.cpp
+  Websockets/Websockets/Session.cpp
+  #Websockets/Websockets/SslSession.cpp
+  Websockets/Websockets/Client.cpp
+  )
+
+target_link_libraries(
+  DanLibWebsockets
+  ${Boost_SYSTEM_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT}
+  )
+
+add_executable(
+  WebSocketServerTest
+  Websockets/Test/ServerTest.cpp
+  )
+
+target_link_libraries(
+  WebSocketServerTest
+  DanLibWebsockets
+  )
+
+add_executable(
+  WebSocketClientTest
+  Websockets/Test/ClientTest.cpp
+  )
+
+target_link_libraries(
+  WebSocketClientTest
+  DanLibWebsockets
+  ${Boost_SYSTEM_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT}
+  )
 #------------------------------------------------------------------------------
 # Serial
 #------------------------------------------------------------------------------
