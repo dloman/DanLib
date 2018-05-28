@@ -37,9 +37,12 @@ Session::Session(
 void Session::Start()
 {
   mWebsocket.async_accept(
-    [this] (const boost::system::error_code& Error)
+    [this, pWeak = weak_from_this()] (const boost::system::error_code& Error)
     {
-      OnAccept(Error);
+      if (auto pThis = pWeak.lock())
+      {
+        OnAccept(Error);
+      }
     });
 }
 
@@ -71,9 +74,12 @@ void Session::DoRead()
 {
   mWebsocket.async_read(
     mBuffer,
-    [this] (const boost::system::error_code& Error, std::size_t BytesTransfered)
+    [this , pWeak = weak_from_this()] (const boost::system::error_code& Error, std::size_t BytesTransfered)
     {
-      OnRead(Error, BytesTransfered);
+      if (auto pThis = pWeak.lock())
+      {
+        OnRead(Error, BytesTransfered);
+      }
     });
 }
 
@@ -115,9 +121,12 @@ void Session::OnRead(const boost::system::error_code& Error, const size_t BytesT
   else
   {
     mCallbackService.post(
-      [this, Error, pThis = shared_from_this()]
+      [this, Error, pWeak = weak_from_this()]
       {
-        mSignalError(Error, "Read Error");
+        if (auto pThis = pWeak.lock())
+        {
+          mSignalError(Error, "Read Error");
+        }
       });
   }
 }
@@ -159,9 +168,12 @@ void Session::AsyncWrite()
           else
           {
             mCallbackService.post(
-              [=]
+              [=, pWeak = weak_from_this()]
               {
-                mSignalError(Error, "Write Error");
+                if (auto pThis = pWeak.lock())
+                {
+                  mSignalError(Error, "Write Error");
+                }
               });
           }
         }));

@@ -13,16 +13,16 @@ std::atomic<size_t> gDoneCount(0u);
 //------------------------------------------------------------------------------
 void Test()
 {
-  std::atomic<bool> Done(false);
-
   std::stringstream Stream("test");
 
   Stream << " " << std::this_thread::get_id();
 
   auto TestString = Stream.str();
 
-  for (int j = 0; j < 1000; ++j)
+  for (int j = 0; j < 100; ++j)
   {
+    std::atomic<bool> Done(false);
+
     dl::ws::Client Client;
 
     Client.GetOnRxSignal().Connect
@@ -31,7 +31,7 @@ void Test()
     Client.GetConnectionSignal().Connect(
       [&Client, &Done, TestString = std::move(TestString)]
       {
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < 10; ++i)
         {
           Client.Write(TestString, dl::ws::DataType::eText);
         }
@@ -43,7 +43,7 @@ void Test()
 
     while(!Done)
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
   }
   gDoneCount++;
