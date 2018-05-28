@@ -23,23 +23,23 @@ void Test()
 
   for (int j = 0; j < 1000; ++j)
   {
-    auto pClient = dl::ws::Client::Create();
+    dl::ws::Client Client;
 
-    pClient->GetOnRxSignal().Connect
+    Client.GetOnRxSignal().Connect
       ([] (const auto& Bytes) { cout << Bytes << endl;});
 
-    pClient->GetConnectionSignal().Connect(
-      [&pClient, &Done, TestString = std::move(TestString)]
+    Client.GetConnectionSignal().Connect(
+      [&Client, &Done, TestString = std::move(TestString)]
       {
         for (int i = 0; i < 1000; ++i)
         {
-          pClient->Write(TestString, dl::ws::DataType::eText);
+          Client.Write(TestString, dl::ws::DataType::eText);
         }
 
         Done = true;
       });
 
-    pClient->Connect();
+    Client.Connect();
 
     while(!Done)
     {

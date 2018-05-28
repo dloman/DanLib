@@ -48,16 +48,11 @@ void Session::OnAccept(const boost::system::error_code& Error)
 {
   if (Error)
   {
-    if (Error == boost::beast::websocket::error::closed)
-    {
-      mSignalOnDisconnect();
-
-      return;
-    }
+    mSignalOnDisconnect();
 
     mSignalError(Error, "On Accept");
 
-    return Start();
+    return;
   }
 
 

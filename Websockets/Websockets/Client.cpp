@@ -5,21 +5,6 @@ using dl::ws::Client;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-std::shared_ptr<dl::ws::Client> Client::Create(
-  const std::string& Hostname,
-  const unsigned Port,
-  const unsigned NumberOfIoThreads,
-  const unsigned NumberOfCallbackThreads)
-{
-  return std::shared_ptr<Client>(new Client(
-    Hostname,
-    Port,
-    NumberOfIoThreads,
-    NumberOfCallbackThreads));
-}
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 Client::Client(
   const std::string& Hostname,
   const unsigned Port,

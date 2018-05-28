@@ -31,7 +31,7 @@ namespace dl::ws
   {
     public:
 
-      static std::shared_ptr<dl::ws::Client> Create(
+      Client(
         const std::string& Hostname = "localhost",
         const unsigned Port = 8181,
         const unsigned NumberOfIoThreads = 1,
@@ -60,12 +60,6 @@ namespace dl::ws
       const dl::Signal<void>& GetOnDisconnectSignal() const;
 
     private:
-
-      Client(
-        const std::string& Hostname,
-        const unsigned Port,
-        const unsigned NumberOfIoThreads,
-        const unsigned NumberOfCallbackThreads);
 
       void StartWorkerThreads(
         boost::asio::io_service& IoService,
