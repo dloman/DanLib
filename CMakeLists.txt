@@ -308,6 +308,19 @@ target_link_libraries(
   ${Boost_SYSTEM_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
   )
+
+add_executable(
+  WebSocketMultiClientTest
+  Websockets/Test/MultiClientTest.cpp
+  )
+
+target_link_libraries(
+  WebSocketMultiClientTest
+  DanLibWebsockets
+  ${Boost_SYSTEM_LIBRARY}
+  ${CMAKE_THREAD_LIBS_INIT}
+  )
+
 #------------------------------------------------------------------------------
 # Serial
 #------------------------------------------------------------------------------
@@ -460,6 +473,7 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 
 install(
 TARGETS
+  DanLibWebsockets
   Http
   Image
   Requests
@@ -493,7 +507,7 @@ install(
   FILES
     Http/Http/Responce.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Http
+    ${DanLib_DIRNAME_include}/Http
   )
 
 install(
@@ -501,28 +515,28 @@ install(
     Image/Image/Image.hpp
     Image/Image/Bitmap.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Images
+    ${DanLib_DIRNAME_include}/Images
   )
 
 install(
   FILES
     Requests/Requests/Requests.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Requests
+    ${DanLib_DIRNAME_include}/Requests
   )
 
 install(
   FILES
     Utility/Signal/Signal.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Signal
+    ${DanLib_DIRNAME_include}/Signal
   )
 
 install(
   FILES
     Utility/Random/Random.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Random
+    ${DanLib_DIRNAME_include}/Random
   )
 
 install(
@@ -530,21 +544,21 @@ install(
     Tcp/Tcp/Server.hpp
     Tcp/Tcp/Session.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Tcp
+    ${DanLib_DIRNAME_include}/Tcp
   )
 
 install(
   FILES
     Serial/Serial/Serial.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Serial
+    ${DanLib_DIRNAME_include}/Serial
   )
 
 install(
   FILES
   Udp/Udp/Server.hpp
   DESTINATION
-    ${DanLib_DIRNAME_include}/DanLib/Udp
+    ${DanLib_DIRNAME_include}/Udp
   )
 
 install(

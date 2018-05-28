@@ -48,10 +48,18 @@ void Session::OnAccept(const boost::system::error_code& Error)
 {
   if (Error)
   {
+    if (Error == boost::beast::websocket::error::closed)
+    {
+      mSignalOnDisconnect();
+
+      return;
+    }
+
     mSignalError(Error, "On Accept");
 
     return Start();
   }
+
 
   DoRead();
 }
@@ -70,20 +78,11 @@ void Session::DoRead()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-std::string to_string(boost::beast::flat_buffer const& buffer)
-{
-  return std::string(boost::asio::buffer_cast<char const*>(
-      boost::beast::buffers_front(buffer.data())),
-    boost::asio::buffer_size(buffer.data()));
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 void Session::OnRead(const boost::system::error_code& Error, const size_t BytesTransfered)
 {
   if (!Error)
   {
-    auto Bytes = to_string(mBuffer);
+    auto Bytes = boost::beast::buffers_to_string(mBuffer.data());
 
     mCallbackService.post(
       [this, pWeak = weak_from_this(), Bytes = std::move(Bytes)]
@@ -100,6 +99,7 @@ void Session::OnRead(const boost::system::error_code& Error, const size_t BytesT
   }
   else if (
     Error == boost::beast::websocket::error::closed ||
+    Error == boost::asio::error::eof ||
     Error == boost::asio::error::connection_reset)
   {
     mCallbackService.post(

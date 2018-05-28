@@ -10,6 +10,7 @@ SET(DanLib_INCLUDE_DIRS ${DanLib_INCLUDE_DIR} )
 
 SET(
   DanLib_LIBRARIES
+  DanLibWebsockets
   Image
   TcpServer
   Signal)

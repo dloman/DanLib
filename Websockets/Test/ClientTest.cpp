@@ -13,11 +13,15 @@ int main()
 
   auto pClient = dl::ws::Client::Create();
 
+  std::atomic<bool> Connected(false);
+
   pClient->GetOnRxSignal().Connect([] (auto Bytes) { cout << Bytes << endl;});
 
   pClient->GetOnDisconnectSignal().Connect(
-    []
+    [&Connected]
     {
+      Connected = false;
+
       cout << "server has disconnected" << endl;
     });
 
@@ -27,14 +31,27 @@ int main()
       cout << "ERROR: " << Error << endl;
     });
 
+  pClient->GetConnectionSignal().Connect([&Connected]
+  {
+    Connected = true;
+  });
+
   pClient->Connect();
 
   while (true)
   {
-    pClient->Write(
-      "client time = " +
-      to_string(chrono::system_clock::now().time_since_epoch().count()) + "\n",
-      dl::ws::DataType::eText);
+    if (Connected)
+    {
+      pClient->Write(
+        "client time = " +
+        to_string(chrono::system_clock::now().time_since_epoch().count()) + "\n",
+        dl::ws::DataType::eText);
+
+      pClient->Write(
+        "client time = " +
+        to_string(chrono::system_clock::now().time_since_epoch().count()) + "\n",
+        dl::ws::DataType::eText);
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }

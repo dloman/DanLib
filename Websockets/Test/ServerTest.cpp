@@ -14,11 +14,11 @@ int main()
   WebsocketServer.GetNewSessionSignal().Connect(
     [] (std::weak_ptr<dl::ws::Session> pWeakSession)
     {
-      std::cout << "woot connected" << std::endl;
+    //std::cout << "woot connected" << std::endl;
 
       auto pSession = pWeakSession.lock();
 
-      cout << "Connect!!!! " << pSession->GetSessionId() << endl;
+      //cout << "Connect!!!! " << pSession->GetSessionId() << endl;
 
       if (pSession)
       {
@@ -39,15 +39,20 @@ int main()
         pSession->GetOnDisconnectSignal().Connect(
           [SessionId]
           {
-            cout
-              << "Session Id " << SessionId
-              << " Disconnected" << endl;
+          //cout
+          //<< "Session Id " << SessionId
+          //<< " Disconnected" << endl;
           });
 
         pSession->GetSignalError().Connect(
          [] (const boost::system::error_code& ErrorCode, const std::string& Message)
          {
-           std::cerr << "Error: " << ErrorCode << Message << std::endl;
+           std::cerr <<
+             "Error: " <<
+             ErrorCode.value() << " " <<
+             ErrorCode.message() << " " <<
+             ErrorCode << " " <<
+             Message << std::endl;
          });
       }
     });
@@ -58,6 +63,8 @@ int main()
       "\nServer time = " +
       std::to_string(chrono::system_clock::now().time_since_epoch().count()),
       dl::ws::DataType::eText);
+
+    std::cout << "number of active connection = " << WebsocketServer.GetConnectionCount() << std::endl;
 
     this_thread::sleep_for(chrono::milliseconds(1000));
   }

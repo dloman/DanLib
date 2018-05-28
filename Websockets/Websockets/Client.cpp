@@ -25,18 +25,19 @@ Client::Client(
   const unsigned Port,
   const unsigned NumberOfIoThreads,
   const unsigned NumberOfCallbackThreads)
-: mIoService(),
+: mThreads(),
+  mIoService(),
   mCallbackService(),
   mResolver(mIoService),
   mWebsocket(mIoService),
   mTimer(mIoService),
   mHostname(Hostname),
   mPort(Port),
-  mThreads(),
   mpNullIoWork(std::make_unique<boost::asio::io_service::work> (mIoService)),
   mpNullCallbackWork(std::make_unique<boost::asio::io_service::work>(mCallbackService)),
   mBuffer(),
-  mStrand(mIoService)
+  mStrand(mWebsocket.get_executor()),
+  mIsSending(false)
 {
   StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
 
@@ -55,7 +56,10 @@ Client::~Client()
 
   for (auto& Thread : mThreads)
   {
-    Thread.join();
+    if (Thread.joinable())
+    {
+      Thread.join();
+    }
   }
 }
 
@@ -75,7 +79,6 @@ void Client::StartWorkerThreads(
 //----------------------------------------------------------------------------
 void Client::Connect()
 {
-
   mResolver.async_resolve(
     mHostname,
     std::to_string(mPort),
@@ -100,15 +103,10 @@ void Client::OnResolve(
       mWebsocket.next_layer(),
       Results.begin(),
       Results.end(),
-      [this, pWeak = weak_from_this()]
+      [this]
       (const boost::system::error_code& Error, boost::asio::ip::tcp::resolver::iterator iEndpoint)
       {
-        auto pThis = pWeak.lock();
-
-        if(pThis)
-        {
-          OnConnect(Error, iEndpoint);
-        }
+        OnConnect(Error, iEndpoint);
       });
 
     mTimer.async_wait([this] (const boost::system::error_code& Error) { OnTimeout(Error); });
@@ -127,16 +125,12 @@ void Client::OnConnect(
 {
   if (!Error)
   {
-
     mWebsocket.async_handshake(
       mHostname,
       "/",
-      [this, pThis = shared_from_this()] (const boost::system::error_code& Error)
+      [this] (const boost::system::error_code& Error)
       {
-        if (pThis)
-        {
-          OnHandshake(Error);
-        }
+        OnHandshake(Error);
       });
 
     mTimer.cancel();
@@ -158,6 +152,8 @@ void Client::OnHandshake(const boost::system::error_code& Error)
   else
   {
     DoRead();
+
+    mSignalConnection();
   }
 }
 
@@ -189,30 +185,18 @@ void Client::DoRead()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-std::string to_string(boost::beast::flat_buffer const& buffer)
-{
-  return std::string(boost::asio::buffer_cast<char const*>(
-      boost::beast::buffers_front(buffer.data())),
-    boost::asio::buffer_size(buffer.data()));
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 void Client::OnRead(
   const boost::system::error_code& Error,
   const size_t BytesTransfered)
 {
   if (!Error)
   {
-    auto Bytes = to_string(mBuffer);
+    auto Bytes = boost::beast::buffers_to_string(mBuffer.data());
 
     mCallbackService.post(
-      [this, pWeak = weak_from_this(), Bytes = std::move(Bytes)]
+      [this, Bytes = std::move(Bytes)]
       {
-        if (auto pThis = pWeak.lock())
-        {
-          mSignalOnRx(Bytes);
-        }
+        mSignalOnRx(Bytes);
       });
 
     DoRead();
@@ -222,7 +206,7 @@ void Client::OnRead(
     Error == boost::asio::error::eof)
   {
     mCallbackService.post(
-      [this, pThis = shared_from_this()]
+      [this]
     {
       mSignalOnDisconnect();
 
@@ -232,7 +216,7 @@ void Client::OnRead(
   else
   {
     mCallbackService.post(
-      [this, Error, pThis = shared_from_this()]
+      [this, Error]
       {
         mSignalError(Error.message());
       });
@@ -243,11 +227,15 @@ void Client::OnRead(
 //----------------------------------------------------------------------------
 void Client::AsyncWrite()
 {
-  if (!mWriteQueue.empty())
+  std::lock_guard Lock(mMutex);
+
+  if (!mWriteQueue.empty() && !mIsSending)
   {
     DataType WriteDataType(DataType::eBinary);
 
     std::tie(mWriteBuffer, WriteDataType) = std::move(mWriteQueue.front());
+
+    mIsSending = true;
 
     mWriteQueue.pop_front();
 
@@ -255,12 +243,19 @@ void Client::AsyncWrite()
 
     mWebsocket.async_write(
       boost::asio::buffer(mWriteBuffer),
-      mStrand.wrap(
-        [this, pThis = shared_from_this()]
+      boost::asio::bind_executor(
+        mStrand,
+        [this]
         (const boost::system::error_code& Error, const size_t BytesTransfered)
         {
           if (!Error)
           {
+            {
+              std::lock_guard Lock(mMutex);
+
+              mIsSending = false;
+            }
+
             AsyncWrite();
           }
           else
@@ -277,15 +272,40 @@ void Client::AsyncWrite()
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+void Client::Write(std::string&& Bytes, dl::ws::DataType DataType)
+{
+  mIoService.post(
+    boost::asio::bind_executor(
+      mStrand,
+      [this, DataType, Bytes = std::move(Bytes)]
+      {
+        {
+          std::lock_guard Lock(mMutex);
+
+          mWriteQueue.emplace_back(std::move(Bytes), DataType);
+        }
+
+        AsyncWrite();
+      }));
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 void Client::Write(const std::string& Bytes, dl::ws::DataType DataType)
 {
-  mIoService.post(mStrand.wrap(
-    [this, DataType, Bytes = std::move(Bytes), pThis = shared_from_this()]
-    {
-      mWriteQueue.emplace_back(std::move(Bytes), DataType);
+  mIoService.post(
+    boost::asio::bind_executor(
+      mStrand,
+      [this, DataType, Bytes]
+      {
+        {
+          std::lock_guard Lock(mMutex);
 
-      AsyncWrite();
-    }));
+          mWriteQueue.emplace_back(std::move(Bytes), DataType);
+        }
+
+        AsyncWrite();
+      }));
 }
 
 //----------------------------------------------------------------------------

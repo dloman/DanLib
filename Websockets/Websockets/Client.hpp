@@ -27,7 +27,7 @@ namespace dl::ws
 {
   enum class DataType;
 
-  class Client : public std::enable_shared_from_this<Client>
+  class Client
   {
     public:
 
@@ -37,7 +37,7 @@ namespace dl::ws
         const unsigned NumberOfIoThreads = 1,
         const unsigned NumberOfCallbackThreads = 1);
 
-      ~Client();
+      virtual ~Client();
 
       Client(const Client& Other) = delete;
 
@@ -48,6 +48,8 @@ namespace dl::ws
       void Connect();
 
       void Write(const std::string& Bytes, dl::ws::DataType DataType);
+
+      void Write(std::string&& Bytes, dl::ws::DataType DataType);
 
       const dl::Signal<const std::string>& GetOnRxSignal() const;
 
@@ -93,6 +95,8 @@ namespace dl::ws
 
     private:
 
+      std::vector<std::thread> mThreads;
+
       boost::asio::io_service mIoService;
 
       boost::asio::io_service mCallbackService;
@@ -107,8 +111,6 @@ namespace dl::ws
 
       unsigned mPort;
 
-      std::vector<std::thread> mThreads;
-
       std::unique_ptr<boost::asio::io_service::work> mpNullIoWork;
 
       std::unique_ptr<boost::asio::io_service::work> mpNullCallbackWork;
@@ -119,7 +121,7 @@ namespace dl::ws
 
       std::string mWriteBuffer;
 
-      boost::asio::io_service::strand mStrand;
+      boost::asio::strand<boost::asio::io_context::executor_type> mStrand;
 
       dl::Signal<void> mSignalConnection;
 
@@ -128,6 +130,10 @@ namespace dl::ws
       dl::Signal<const std::string> mSignalOnRx;
 
       dl::Signal<void> mSignalOnDisconnect;
+
+      std::mutex mMutex;
+
+      bool mIsSending;
   };
 }
 
