@@ -27,7 +27,8 @@ Session::Session(
    mSocket(mIoService),
    mWebsocket(mSocket),
    mStrand(mIoService),
-   mBuffer()
+   mBuffer(),
+   mIsSending(false)
 {
 }
 
@@ -49,6 +50,11 @@ void Session::OnAccept(const boost::system::error_code& Error)
   if (Error)
   {
     mSignalOnDisconnect();
+
+    if (Error == boost::beast::websocket::error::closed)
+    {
+      return;
+    }
 
     mSignalError(Error, "On Accept");
 
@@ -120,11 +126,15 @@ void Session::OnRead(const boost::system::error_code& Error, const size_t BytesT
 //------------------------------------------------------------------------------
 void Session::AsyncWrite()
 {
-  if (!mWriteQueue.empty())
+  std::lock_guard Lock(mMutex);
+
+  if (!mWriteQueue.empty() && !mIsSending)
   {
     DataType WriteDataType(DataType::eBinary);
 
     std::tie(mWriteBuffer, WriteDataType) = std::move(mWriteQueue.front());
+
+    mIsSending = true;
 
     mWriteQueue.pop_front();
 
@@ -138,6 +148,12 @@ void Session::AsyncWrite()
         {
           if (!Error)
           {
+            {
+              std::lock_guard Lock(mMutex);
+
+              mIsSending = false;
+            }
+
             AsyncWrite();
           }
           else
@@ -159,7 +175,11 @@ void Session::Write(const std::string& Bytes, dl::ws::DataType DataType)
   mIoService.post(mStrand.wrap(
     [this, DataType, Bytes = std::move(Bytes), pThis = shared_from_this()]
     {
-      mWriteQueue.emplace_back(std::move(Bytes), DataType);
+      {
+        std::lock_guard Lock(mMutex);
+
+        mWriteQueue.emplace_back(std::move(Bytes), DataType);
+      }
 
       AsyncWrite();
     }));

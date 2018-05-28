@@ -97,6 +97,9 @@ namespace dl::ws
 
       boost::beast::flat_buffer mBuffer;
 
+      std::mutex mMutex;
+
+      bool mIsSending;
   };
 }
 
