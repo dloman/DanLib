@@ -1,7 +1,13 @@
 #include "Client.hpp"
 #include <Websockets/Session.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+#include <Variant/Visitor.hpp>
 
 using dl::ws::Client;
+
+using tcp = boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
+namespace websocket = boost::beast::websocket;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -14,14 +20,14 @@ Client::Client(
   mIoService(),
   mCallbackService(),
   mResolver(mIoService),
-  mWebsocket(mIoService),
+  mWebsocket(websocket::stream<tcp::socket>{mIoService}),
   mTimer(mIoService),
   mHostname(Hostname),
   mPort(Port),
   mpNullIoWork(std::make_unique<boost::asio::io_service::work> (mIoService)),
   mpNullCallbackWork(std::make_unique<boost::asio::io_service::work>(mCallbackService)),
   mBuffer(),
-  mStrand(mWebsocket.get_executor()),
+  mStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
   mIsSending(false)
 {
   StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
@@ -84,15 +90,33 @@ void Client::OnResolve(
   {
     mTimer.expires_from_now(std::chrono::seconds(2));
 
-    boost::asio::async_connect(
-      mWebsocket.next_layer(),
-      Results.begin(),
-      Results.end(),
-      [this]
-      (const boost::system::error_code& Error, boost::asio::ip::tcp::resolver::iterator iEndpoint)
+    auto Connect = [this, &Results](websocket::stream<tcp::socket>& Websocket)
       {
-        OnConnect(Error, iEndpoint);
-      });
+        boost::asio::async_connect(
+          Websocket.next_layer(),
+          Results.begin(),
+          Results.end(),
+          [this]
+          (const boost::system::error_code& Error, tcp::resolver::iterator iEndpoint)
+          {
+            OnConnect(Error, iEndpoint);
+          });
+      };
+
+    auto SslConnect = [this, &Results](websocket::stream<ssl::stream<tcp::socket>>& Websocket)
+      {
+        boost::asio::async_connect(
+          Websocket.next_layer().next_layer(),
+          Results.begin(),
+          Results.end(),
+          [this]
+          (const boost::system::error_code& Error, tcp::resolver::iterator iEndpoint)
+          {
+            OnConnect(Error, iEndpoint);
+          });
+      };
+
+    std::visit(dl::Visitor{Connect, SslConnect}, mWebsocket);
 
     mTimer.async_wait([this] (const boost::system::error_code& Error) { OnTimeout(Error); });
   }
@@ -110,15 +134,61 @@ void Client::OnConnect(
 {
   if (!Error)
   {
-    mWebsocket.async_handshake(
-      mHostname,
-      "/",
-      [this] (const boost::system::error_code& Error)
-      {
-        OnHandshake(Error);
-      });
+    auto Handshake = [this](websocket::stream<tcp::socket>& Websocket)
+    {
+      Websocket.async_handshake(
+        mHostname,
+        "/",
+        [this] (const boost::system::error_code& Error)
+        {
+          OnHandshake(Error);
+        });
+    };
+
+    auto SslHandshake = [this](websocket::stream<ssl::stream<tcp::socket>>& Websocket)
+    {
+      Websocket.next_layer().async_handshake(
+        ssl::stream_base::client,
+        [this] (const boost::system::error_code& Error)
+        {
+          OnSslHandshake(Error);
+        });
+    };
+
+
+    std::visit(dl::Visitor{Handshake, SslHandshake}, mWebsocket);
 
     mTimer.cancel();
+  }
+  else
+  {
+    mSignalError(Error.message());
+  }
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+void Client::OnSslHandshake(const boost::system::error_code& Error)
+{
+  if (!Error)
+  {
+    auto SignalError = [this](websocket::stream<tcp::socket>& Websocket)
+    {
+      mSignalError("ssl handshake on non ssl client");
+    };
+
+    auto Handshake = [this](websocket::stream<ssl::stream<tcp::socket>>& Websocket)
+    {
+      Websocket.async_handshake(
+        mHostname,
+        "/",
+        [this] (const boost::system::error_code& Error)
+        {
+          OnHandshake(Error);
+        });
+    };
+
+    std::visit(dl::Visitor{SignalError, Handshake}, mWebsocket);
   }
   else
   {
@@ -160,12 +230,26 @@ void Client::OnTimeout(const boost::system::error_code& Error)
 //----------------------------------------------------------------------------
 void Client::DoRead()
 {
-  mWebsocket.async_read(
-    mBuffer,
-    [this] (const boost::system::error_code& Error, std::size_t BytesTransfered)
-    {
-      OnRead(Error, BytesTransfered);
-    });
+  auto Read = [this](websocket::stream<tcp::socket>& Websocket)
+  {
+    Websocket.async_read(
+      mBuffer,
+      [this] (const boost::system::error_code& Error, std::size_t BytesTransfered)
+      {
+        OnRead(Error, BytesTransfered);
+      });
+  };
+
+  auto SslRead = [this](websocket::stream<ssl::stream<tcp::socket>>& Websocket)
+  {
+    Websocket.async_read(
+      mBuffer,
+      [this] (const boost::system::error_code& Error, std::size_t BytesTransfered)
+      {
+        OnRead(Error, BytesTransfered);
+      });
+  };
+  std::visit(dl::Visitor{Read, SslRead}, mWebsocket);
 }
 
 //------------------------------------------------------------------------------
@@ -224,34 +308,69 @@ void Client::AsyncWrite()
 
     mWriteQueue.pop_front();
 
-    mWebsocket.text(WriteDataType == DataType::eText);
+    auto Write = [this, WriteDataType](websocket::stream<tcp::socket>& Websocket)
+    {
+      Websocket.text(WriteDataType == DataType::eText);
 
-    mWebsocket.async_write(
-      boost::asio::buffer(mWriteBuffer),
-      boost::asio::bind_executor(
-        mStrand,
-        [this]
-        (const boost::system::error_code& Error, const size_t BytesTransfered)
-        {
-          if (!Error)
+      Websocket.async_write(
+        boost::asio::buffer(mWriteBuffer),
+        boost::asio::bind_executor(
+          mStrand,
+          [this]
+          (const boost::system::error_code& Error, const size_t BytesTransfered)
           {
+            if (!Error)
             {
-              std::lock_guard Lock(mMutex);
-
-              mIsSending = false;
-            }
-
-            AsyncWrite();
-          }
-          else
-          {
-            mCallbackService.post(
-              [=]
               {
-                mSignalError("Write Error " + Error.message());
-              });
-          }
-        }));
+                std::lock_guard Lock(mMutex);
+
+                mIsSending = false;
+              }
+
+              AsyncWrite();
+            }
+            else
+            {
+              mCallbackService.post(
+                [=]
+                {
+                  mSignalError("Write Error " + Error.message());
+                });
+            }
+          }));
+    };
+
+    auto SslWrite = [this](websocket::stream<ssl::stream<tcp::socket>>& Websocket)
+    {
+      Websocket.async_write(
+        boost::asio::buffer(mWriteBuffer),
+        boost::asio::bind_executor(
+          mStrand,
+          [this]
+          (const boost::system::error_code& Error, const size_t BytesTransfered)
+          {
+            if (!Error)
+            {
+              {
+                std::lock_guard Lock(mMutex);
+
+                mIsSending = false;
+              }
+
+              AsyncWrite();
+            }
+            else
+            {
+              mCallbackService.post(
+                [=]
+                {
+                  mSignalError("Write Error " + Error.message());
+                });
+            }
+          }));
+    };
+
+    std::visit(dl::Visitor{Write, SslWrite}, mWebsocket);
   }
 }
 

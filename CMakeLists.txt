@@ -285,6 +285,7 @@ target_link_libraries(
   DanLibWebsockets
   ${Boost_SYSTEM_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT}
+  ${OPENSSL_LIBRARIES}
   )
 
 add_executable(

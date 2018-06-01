@@ -16,12 +16,14 @@
 #include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
 #include <deque>
 #include <memory>
 #include <thread>
+#include <variant>
 
 namespace dl::ws
 {
@@ -73,9 +75,11 @@ namespace dl::ws
 
       void OnConnect(
         const boost::system::error_code& Error,
-      boost::asio::ip::tcp::resolver::iterator iEndpoint);
+        boost::asio::ip::tcp::resolver::iterator iEndpoint);
 
       void OnHandshake(const boost::system::error_code& Error);
+
+      void OnSslHandshake(const boost::system::error_code& Error);
 
       void OnTimeout(const boost::system::error_code& Error);
 
@@ -97,7 +101,9 @@ namespace dl::ws
 
       boost::asio::ip::tcp::resolver mResolver;
 
-      boost::beast::websocket::stream<boost::asio::ip::tcp::socket> mWebsocket;
+      std::variant<
+        boost::beast::websocket::stream<boost::asio::ip::tcp::socket>,
+        boost::beast::websocket::stream<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>> mWebsocket;
 
       boost::asio::basic_waitable_timer<std::chrono::system_clock> mTimer;
 
