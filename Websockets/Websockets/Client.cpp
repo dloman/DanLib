@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include <Websockets/Session.hpp>
+#include <boost/asio/ssl/stream.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <Variant/Visitor.hpp>
 
@@ -21,6 +22,33 @@ Client::Client(
   mCallbackService(),
   mResolver(mIoService),
   mWebsocket(websocket::stream<tcp::socket>{mIoService}),
+  mTimer(mIoService),
+  mHostname(Hostname),
+  mPort(Port),
+  mpNullIoWork(std::make_unique<boost::asio::io_service::work> (mIoService)),
+  mpNullCallbackWork(std::make_unique<boost::asio::io_service::work>(mCallbackService)),
+  mBuffer(),
+  mStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
+  mIsSending(false)
+{
+  StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
+
+  StartWorkerThreads(mIoService, NumberOfIoThreads);
+}
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+Client::Client(
+  ssl::context& Context,
+  const std::string& Hostname,
+  const unsigned Port,
+  const unsigned NumberOfIoThreads,
+  const unsigned NumberOfCallbackThreads)
+: mThreads(),
+  mIoService(),
+  mCallbackService(),
+  mResolver(mIoService),
+  mWebsocket(std::in_place_index<1>, mIoService, Context),
   mTimer(mIoService),
   mHostname(Hostname),
   mPort(Port),

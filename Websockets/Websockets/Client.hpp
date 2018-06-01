@@ -39,6 +39,12 @@ namespace dl::ws
         const unsigned NumberOfIoThreads = 1,
         const unsigned NumberOfCallbackThreads = 1);
 
+      Client(
+        boost::asio::ssl::context& Context,
+        const std::string& Hostname = "localhost",
+        const unsigned Port = 8181,
+        const unsigned NumberOfIoThreads = 1,
+        const unsigned NumberOfCallbackThreads = 1);
       virtual ~Client();
 
       Client(const Client& Other) = delete;
