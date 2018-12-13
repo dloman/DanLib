@@ -147,7 +147,7 @@ namespace dl::request
 
     Thread.detach();
 
-    return std::move(Future);
+    return Future;
   }
 
   //----------------------------------------------------------------------------
