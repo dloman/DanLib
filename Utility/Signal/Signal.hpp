@@ -15,6 +15,9 @@ namespace dl
       template <typename SlotType>
       void Connect(SlotType&& Slot) const;
 
+      template <typename ... U>
+      void Connect(const std::function<void(U...)>&) const;
+
       template <class ... ArgsType>
       void operator()(ArgsType&& ... Args);
 
@@ -36,6 +39,17 @@ namespace dl
     std::lock_guard<std::mutex> LockGuard(mMutex);
 
     mSlots.emplace_back(std::forward<SlotType>(Slot));
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  template <typename ... T>
+  template <typename ... U>
+  void Signal<T...>::Connect(const std::function<void(U...)>& Slot) const
+  {
+    std::lock_guard<std::mutex> LockGuard(mMutex);
+
+    mSlots.emplace_back(Slot);
   }
 
   //----------------------------------------------------------------------------
@@ -71,6 +85,8 @@ namespace dl
       template <typename SlotType>
       void Connect(SlotType&& Slot) const;
 
+      void Connect(const std::function<void(void)>&) const;
+
       template <class ... ArgsType>
       void operator()(ArgsType&& ... Args);
 
@@ -91,6 +107,16 @@ namespace dl
     std::lock_guard<std::mutex> LockGuard(mMutex);
 
     mSlots.emplace_back(std::forward<SlotType>(Slot));
+  }
+
+  //----------------------------------------------------------------------------
+  //----------------------------------------------------------------------------
+  inline
+  void Signal<void>::Connect(const std::function<void(void)>& Slot) const
+  {
+    std::lock_guard<std::mutex> LockGuard(mMutex);
+
+    mSlots.emplace_back(Slot);
   }
 
   //----------------------------------------------------------------------------

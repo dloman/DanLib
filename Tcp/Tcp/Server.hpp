@@ -19,14 +19,24 @@
 
 namespace dl::tcp
 {
+  struct ServerSettings
+  {
+    unsigned short mPort = 8080;
+
+    unsigned mNumberOfIoThreads = 1;
+
+    unsigned mNumberOfCallbackThreads = 1;
+
+    std::function<void(std::shared_ptr<dl::tcp::Session>)> mOnNewSessionCallback;
+
+    std::function<void(const asio::error_code&)> mErrorCallback;
+  };
+
   class Server
   {
     public:
 
-      Server(
-        unsigned short Port,
-        unsigned NumberOfIoThreads = 1,
-        unsigned NumberOfCallbackThreads = 1);
+      Server(const ServerSettings&);
 
       ~Server();
 
@@ -34,13 +44,7 @@ namespace dl::tcp
 
       Server& operator = (const Server& Rhs) = delete;
 
-      std::shared_ptr<dl::tcp::Session> GetSession();
-
       using NewSessionSignal = dl::Signal<std::shared_ptr<dl::tcp::Session>>;
-
-      const NewSessionSignal& GetNewSessionSignal() const;
-
-      const dl::Signal<const asio::error_code&>& GetErrorSignal() const;
 
       const size_t GetConnectionCount() const;
 
@@ -82,24 +86,8 @@ namespace dl::tcp
   //----------------------------------------------------------------------------
   //----------------------------------------------------------------------------
   inline
-  const Server::NewSessionSignal& Server::GetNewSessionSignal() const
-  {
-    return mSignalNewSession;
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  inline
   const size_t Server::GetConnectionCount() const
   {
     return mActiveSessions.size();
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  inline
-  const dl::Signal<const asio::error_code&>& Server::GetErrorSignal() const
-  {
-    return mErrorSignal;
   }
 }

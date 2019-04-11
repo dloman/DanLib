@@ -20,15 +20,32 @@
 namespace dl::tcp
 {
   template <typename SessionType = dl::tcp::Session>
+  struct ClientSettings
+  {
+    std::string mHostname = "localhost";
+
+    unsigned mPort = 8181;
+
+    unsigned mNumberOfIoThreads = 2;
+
+    unsigned mNumberOfCallbackThreads = 2;
+
+    std::function<void(const std::string&)> mOnRxCallback;
+
+    std::function<void(const std::shared_ptr<SessionType>&)> mConnectionCallback;
+
+    std::function<void(const std::string&)> mConnectionErrorCallback;
+
+    std::function<void(void)> mOnDisconnectCallback;
+
+  };
+
+  template <typename SessionType = dl::tcp::Session>
   class Client
   {
     public:
 
-      Client(
-        const std::string& Hostname = "localhost",
-        const unsigned Port = 8181,
-        const unsigned NumberOfIoThreads = 2,
-        const unsigned NumberOfCallbackThreads = 2);
+      Client(const ClientSettings<SessionType>&);
 
       ~Client();
 
@@ -37,14 +54,6 @@ namespace dl::tcp
       Client& operator = (const Client& Rhs) = delete;
 
       void Write(const std::string& Bytes);
-
-      const dl::Signal<const std::string>& GetOnRxSignal() const;
-
-      const dl::Signal<void>& GetConnectionSignal() const;
-
-      const dl::Signal<const std::string>& GetConnectionErrorSignal() const;
-
-      const dl::Signal<void>& GetOnDisconnectSignal() const;
 
     private:
 
@@ -96,7 +105,7 @@ namespace dl::tcp
 
       std::unique_ptr<asio::io_service::work> mpNullCallbackWork;
 
-      dl::Signal<void> mSignalConnection;
+      dl::Signal<std::shared_ptr<SessionType>&> mSignalConnection;
 
       dl::Signal<const std::string> mSignalConnectionError;
 
@@ -109,28 +118,45 @@ namespace dl::tcp
   //----------------------------------------------------------------------------
   template <typename SessionType>
   dl::tcp::Client<SessionType>::Client(
-    const std::string& Hostname,
-    const unsigned Port,
-    const unsigned NumberOfIoThreads,
-    const unsigned NumberOfCallbackThreads)
+    const dl::tcp::ClientSettings<SessionType>& ClientSettings)
   : mIoService(),
     mCallbackService(),
     mResolver(mIoService),
     mpSession(nullptr),
     mTimer(mIoService),
-    mHostname(Hostname),
-    mPort(Port),
+    mHostname(ClientSettings.mHostname),
+    mPort(ClientSettings.mPort),
     mConnectionMutex(),
     mThreads(),
     mIsRunning(true),
     mpNullIoWork(std::make_unique<asio::io_service::work> (mIoService)),
     mpNullCallbackWork(std::make_unique<asio::io_service::work>(mCallbackService))
   {
-    StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
+    if (ClientSettings.mConnectionCallback)
+    {
+      mSignalConnection.Connect(ClientSettings.mConnectionCallback);
+    }
+
+    if (ClientSettings.mConnectionErrorCallback)
+    {
+      mSignalConnectionError.Connect(ClientSettings.mConnectionErrorCallback);
+    }
+
+    if (ClientSettings.mOnRxCallback)
+    {
+      mSignalOnRx.Connect(ClientSettings.mOnRxCallback);
+    }
+
+    if (ClientSettings.mOnDisconnectCallback)
+    {
+      mSignalOnDisconnect.Connect(ClientSettings.mOnDisconnectCallback);
+    }
+
+    StartWorkerThreads(mCallbackService, ClientSettings.mNumberOfCallbackThreads);
 
     Connect();
 
-    StartWorkerThreads(mIoService, NumberOfIoThreads);
+    StartWorkerThreads(mIoService, ClientSettings.mNumberOfIoThreads);
   }
 
   //----------------------------------------------------------------------------
@@ -239,7 +265,7 @@ namespace dl::tcp
     {
       mpSession->Start();
 
-      mSignalConnection();
+      mSignalConnection(mpSession);
 
       mTimer.cancel();
     }
@@ -283,37 +309,5 @@ namespace dl::tcp
     {
       mpSession->Write(Bytes);
     }
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  template <typename SessionType>
-  const dl::Signal<const std::string>& dl::tcp::Client<SessionType>::GetOnRxSignal() const
-  {
-    return mSignalOnRx;
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  template <typename SessionType>
-  const dl::Signal<void >& dl::tcp::Client<SessionType>::GetConnectionSignal() const
-  {
-    return mSignalConnection;
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  template <typename SessionType>
-  const dl::Signal<const std::string>& dl::tcp::Client<SessionType>::GetConnectionErrorSignal() const
-  {
-    return mSignalConnectionError;
-  }
-
-  //----------------------------------------------------------------------------
-  //----------------------------------------------------------------------------
-  template <typename SessionType>
-  const dl::Signal<void>& dl::tcp::Client<SessionType>::GetOnDisconnectSignal() const
-  {
-    return mSignalOnDisconnect;
   }
 }

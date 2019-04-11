@@ -11,12 +11,9 @@ int main()
 {
   cout << "Client connecting on localhost 8181" << endl;
 
-  dl::tcp::Client<dl::tcp::Session> Client;
-
-  Client.GetOnRxSignal().Connect([] (auto Bytes) { cout << Bytes << endl;});
-
-  Client.GetOnDisconnectSignal().Connect(
-    [] { cout << "server has disconnected" << endl;});
+  dl::tcp::Client<dl::tcp::Session> Client(dl::tcp::ClientSettings<dl::tcp::Session>{
+    .mOnRxCallback = [] (auto Bytes) { cout << Bytes << endl;},
+    .mOnDisconnectCallback = [] { cout << "server has disconnected" << endl;}});
 
   while (true)
   {

@@ -16,5 +16,4 @@ namespace dl
   {
     return Visitor<Ts...>{std::forward<Ts>(ts)...};
   }
-
 }

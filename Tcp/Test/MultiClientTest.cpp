@@ -13,13 +13,14 @@ int main()
 
   for (int i = 0; i < 1000; ++i)
   {
-    std::array<dl::tcp::Client<dl::tcp::Session>, 100> Clients;
+    std::vector<dl::tcp::Client<dl::tcp::Session>> Clients;
 
-    for (auto& Client : Clients)
-    {
-      Client.GetOnRxSignal().Connect
-        ([] (const auto& Bytes) { cout << Bytes << endl;});
-    }
+    //for (int i = 0; i < 100; ++i)
+    //{
+      //Clients.emplace_back(
+        //dl::tcp::ClientSettings<dl::tcp::Session>{
+          //.mOnRxCallback = [] (const string& Bytes) { cout << Bytes << endl;}});
+    //}
 
     for (auto& TcpClient : Clients)
     {

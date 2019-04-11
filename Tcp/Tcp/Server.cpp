@@ -14,12 +14,11 @@ using dl::tcp::Server;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
-Server::Server(
-  unsigned short Port,
-  unsigned NumberOfIoThreads,
-  unsigned NumberOfCallbackThreads)
+Server::Server(const dl::tcp::ServerSettings& Settings)
   : mIoService(),
-    mAcceptor(mIoService, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Port)),
+    mAcceptor(
+      mIoService,
+      asio::ip::tcp::endpoint(asio::ip::tcp::v4(), Settings.mPort)),
     mCallbackService(),
     mpNullWork(nullptr),
     mpNewSession(nullptr),
@@ -27,15 +26,25 @@ Server::Server(
     mThreads(),
     mMutex()
 {
+  if (Settings.mOnNewSessionCallback)
+  {
+    mSignalNewSession.Connect(Settings.mOnNewSessionCallback);
+  }
+
+  if (Settings.mErrorCallback)
+  {
+    mErrorSignal.Connect(Settings.mErrorCallback);
+  }
+
   mAcceptor.set_option(asio::ip::tcp::acceptor::reuse_address(true));
 
   StartAccept();
 
-  StartWorkerThreads(mIoService, NumberOfIoThreads);
+  StartWorkerThreads(mIoService, Settings.mNumberOfIoThreads);
 
   mpNullWork = std::make_shared<asio::io_service::work> (mCallbackService);
 
-  StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
+  StartWorkerThreads(mCallbackService, Settings.mNumberOfCallbackThreads);
 }
 
 //------------------------------------------------------------------------------

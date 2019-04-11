@@ -7,48 +7,46 @@ using namespace std;
 //------------------------------------------------------------------------------
 int main()
 {
-  dl::tcp::Server TcpServer(8181, 2, 2);
-
-  cout << "Server Listening on 8181" << endl;
-
-  TcpServer.GetNewSessionSignal().Connect(
-    [] (std::weak_ptr<dl::tcp::Session> pWeakSession)
-    {
-      auto pSession = pWeakSession.lock();
-      cout << "Connect!!!! " << pSession->GetSessionId() << endl;
-      if (pSession)
+  dl::tcp::Server TcpServer(dl::tcp::ServerSettings{
+    .mPort = 8181,
+    .mNumberOfIoThreads = 2,
+    .mNumberOfCallbackThreads = 2,
+    .mOnNewSessionCallback =
+      [] (std::shared_ptr<dl::tcp::Session> pSession)
       {
-        pSession->GetOnRxSignal().Connect(
-          [pWeakSession]
-          (const std::string& Bytes)
-          {
-            std::shared_ptr<dl::tcp::Session> pSession = pWeakSession.lock();
-
-            if (pSession)
+        cout << "Connect!!!! " << pSession->GetSessionId() << endl;
+        if (pSession)
+        {
+          pSession->GetOnRxSignal().Connect(
+            [pWeakSession= std::weak_ptr<dl::tcp::Session>(pSession)]
+            (const std::string& Bytes)
             {
-              try
+              if (auto pSession = pWeakSession.lock())
               {
-                pSession->Write("Server recived bytes = " + Bytes);
-                std::cout << Bytes << std::endl;
+                try
+                {
+                  pSession->Write("Server recived bytes = " + Bytes);
+                  std::cout << Bytes << std::endl;
+                }
+                catch(std::exception& Exception)
+                {
+                  std::cerr << "ERROR: " << Exception.what();
+                }
               }
-              catch(std::exception& Exception)
-              {
-                std::cerr << "ERROR: " << Exception.what();
-              }
-            }
-          });
+            });
 
-        auto SessionId = pSession->GetSessionId();
-        pSession->GetOnDisconnectSignal().Connect(
-          [SessionId]
-          {
-            cout
-              << "Session Id " << SessionId
-              << " Disconnected" << endl;
-          });
+          auto SessionId = pSession->GetSessionId();
 
-      }
-    });
+          pSession->GetOnDisconnectSignal().Connect(
+            [SessionId]
+            {
+              cout
+                << "Session Id " << SessionId
+                << " Disconnected" << endl;
+            });
+
+        }
+      }});
 
   while (true)
   {
