@@ -138,7 +138,7 @@ add_executable(
 include_directories(Tcp)
 
 add_library(
-  Tcp
+  DanLibTcp
   Tcp/Tcp/Client.hpp
   Tcp/Tcp/Server.cpp
   Tcp/Tcp/Server.hpp
@@ -150,7 +150,7 @@ add_library(
   )
 
 target_link_libraries(
-  Tcp
+  DanLibTcp
   Signal
   ${OPENSSL_LIBRARIES}
   )
@@ -162,12 +162,7 @@ add_executable(
 
 target_link_libraries(
   Server
-  Tcp
-  )
-
-target_link_libraries(
-  Tcp
-  Signal
+  DanLibTcp
   )
 
 add_executable(
@@ -177,7 +172,7 @@ add_executable(
 
 target_link_libraries(
   Client
-  Tcp
+  DanLibTcp
   )
 
 add_executable(
@@ -187,7 +182,7 @@ add_executable(
 
 target_link_libraries(
   MultipleClientTest
-  Tcp
+  DanLibTcp
   )
 
 add_executable(
@@ -197,7 +192,7 @@ add_executable(
 
 target_link_libraries(
   SslClientTest
-  Tcp
+  DanLibTcp
   )
 
 #------------------------------------------------------------------------------
@@ -544,6 +539,9 @@ install(
   FILES
     Tcp/Tcp/Server.hpp
     Tcp/Tcp/Session.hpp
+    Tcp/Tcp/SslSession.hpp
+    Tcp/Tcp/SessionFactory.hpp
+    Tcp/Tcp/Client.hpp
   DESTINATION
     ${DanLib_DIRNAME_include}/Tcp
   )
