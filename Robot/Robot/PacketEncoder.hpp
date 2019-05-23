@@ -7,6 +7,23 @@
 
 namespace dl::robot
 {
+  template <typename T>
+  inline
+  void SerializeMember(std::ostream& Stream, const T& Member)
+  {
+    Stream.write(
+      reinterpret_cast<char*>(const_cast<T*>(&Member)),
+      sizeof(Member));
+  }
+
+  inline
+  void SerializeMember(std::ostream& Stream, const std::string& String)
+  {
+    SerializeMember(Stream, String.size());
+
+    Stream.write(String.data(), String.size());
+  }
+
   class PacketEncoder
   {
     public:
@@ -19,9 +36,9 @@ namespace dl::robot
         {
           boost::hana::for_each(
             boost::hana::members(Object),
-            [&](auto Member)
+            [&](const auto& Member)
             {
-              OutputStream.write(reinterpret_cast<char*>(&Member), sizeof(Member));
+              dl::robot::SerializeMember(OutputStream, Member);
             });
         };
 

@@ -27,7 +27,7 @@ void TestPacket(Type Packet)
 
   Header.mPayloadSize = sizeof(Packet);
 
-  gPacketDecoder.Decode(Header, std::experimental::string_view(EncodedPacket));
+  gPacketDecoder.Decode(Header, std::string_view(EncodedPacket));
 }
 
 //------------------------------------------------------------------------------
@@ -45,6 +45,7 @@ int main()
   Position.mPostionX = 69;
   Position.mPostionY = 420;
   Position.mPostionZ = 1337;
+  Position.mData = "tacos are delicious";
 
   gPacketDecoder.GetSignal<dl::robot::packet::MotorCommand>().Connect(
     [&MotorCommand] (const auto& DecodedMotorCommand)
@@ -67,7 +68,8 @@ int main()
       std::cout << "Position = "
         << DecodedPosition.mPostionX << ','
         << DecodedPosition.mPostionY << ','
-        << DecodedPosition.mPostionZ << std::endl;
+        << DecodedPosition.mPostionZ << ","
+        << DecodedPosition.mData << std::endl;
     });
 
   try

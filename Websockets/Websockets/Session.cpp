@@ -74,13 +74,17 @@ void Session::DoRead()
 {
   mWebsocket.async_read(
     mBuffer,
+    boost::beast::bind_handler(
+      &Session::OnRead,
+      shared_from_this()));
+    /*
     [this , pWeak = weak_from_this()] (const boost::system::error_code& Error, std::size_t BytesTransfered)
     {
       if (auto pThis = pWeak.lock())
       {
         OnRead(Error, BytesTransfered);
       }
-    });
+    });*/
 }
 
 //------------------------------------------------------------------------------

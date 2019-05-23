@@ -79,10 +79,12 @@ namespace dl::request
     const std::string& Data,
     const unsigned Port)
   {
+
     std::promise<dl::http::Responce> Promise;
 
     std::future<dl::http::Responce> Future = Promise.get_future();
 
+    /*
     std::thread Thread(
       [Url, Port, Data = std::move(Data), Promise = std::move(Promise)] () mutable
       {
@@ -147,6 +149,7 @@ namespace dl::request
 
     Thread.detach();
 
+    */
     return Future;
   }
 

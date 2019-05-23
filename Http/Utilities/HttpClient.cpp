@@ -10,8 +10,10 @@ using namespace std::literals;
 //------------------------------------------------------------------------------
 int main(int argc, const char** argv)
 {
+
   std::string Host = "localhost";
 
+  /*
 
   int Port = 80;
 
@@ -30,7 +32,7 @@ int main(int argc, const char** argv)
   Client.GetOnDisconnectSignal().Connect(
     [&] { cout << "server has disconnected" << endl; Finished = true;});
 
-  Client.GetConnectionSignal().Connect([&]
+  Client.GetConnectionSignal().Connect([&] (const std::shared_ptr<dl::tcp::Session>& pSession
     {
       std::string Hostname = Host;
 
@@ -39,15 +41,15 @@ int main(int argc, const char** argv)
         Hostname += std::to_string(Port);
       }
 
-      Client.Write(
-        "GET / HTTP/1.1\r\nUser-Agent: DanLib/0.0.1 (linux-gnu)\r\n"s +
-        "Accept: */*\r\nAccept-Encoding: identity\r\nHost: " + Hostname +
-        "\r\nConnection: close\r\n\r\n");
-    });
+      */
+  //Client.Write(
+  //"GET / HTTP/1.1\r\nUser-Agent: DanLib/0.0.1 (linux-gnu)\r\n"s +
+  //"Accept: */*\r\nAccept-Encoding: identity\r\nHost: " + Hostname +
+  //"\r\nConnection: close\r\n\r\n");
+  //});
 
-  while (!Finished)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-
+  //while (!Finished)
+  //{
+  //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  //}
 }

@@ -27,7 +27,7 @@ namespace dl::robot
       }
 
       static dl::robot::packet::Header DecodeHeader(
-        std::experimental::string_view Bytes)
+        std::string_view Bytes)
       {
         dl::robot::packet::Header Header;
 
@@ -42,7 +42,7 @@ namespace dl::robot
 
       void Decode(
         const dl::robot::packet::Header& Header,
-        std::experimental::string_view Bytes)
+        std::string_view Bytes)
       {
         if (Header.mVersion != dl::robot::packet::CurrentPacketVersion)
         {
@@ -70,19 +70,19 @@ namespace dl::robot
       }
 
       template <typename Type>
-      Type DecodePacket(std::experimental::string_view& Bytes) const
+      Type DecodePacket(std::string_view& Bytes) const
       {
         Type Packet;
 
         constexpr auto Decoder =
-          [](std::experimental::string_view& Bytes, auto& Object)
+          [](std::string_view& Bytes, auto& Object)
           {
             boost::hana::for_each(boost::hana::keys(Object), [&](auto&& Key)
               {
                 auto& Member = boost::hana::at_key(Object, Key);
-                Member =
-                  dl::robot::PacketDecoder<PacketTypes...>::Decode<
-                    std::remove_reference_t<decltype(Member)>> (Bytes);
+                //Member =
+                //dl::robot::PacketDecoder<PacketTypes...>::Decode<
+                //std::remove_reference_t<decltype(Member)>> (Bytes);
 
               });
           };
@@ -95,7 +95,7 @@ namespace dl::robot
     private:
 
       template <typename Type>
-      static Type Decode(std::experimental::string_view& Bytes)
+      static Type Decode(std::string_view& Bytes)
       {
         Type Value;
 
@@ -112,7 +112,7 @@ namespace dl::robot
         {
           using PacketType = decltype(std::get<Index>(Tuple));
           Map[boost::typeindex::type_id<PacketType>()] =
-            [&] (std::experimental::string_view& Bytes)
+            [&] (std::string_view& Bytes)
             {
               auto Packet = DecodePacket<std::decay_t<PacketType>>(Bytes);
               auto& Signal = std::get<dl::Signal<const PacketType&>>(mPacketSignals);
@@ -134,7 +134,7 @@ namespace dl::robot
 
       boost::unordered_map<
         boost::typeindex::type_index,
-        std::function<void(std::experimental::string_view&)>> mPacketDecoders;
+        std::function<void(std::string_view&)>> mPacketDecoders;
 
       std::tuple<PacketTypes...> mPacketTypes;
   };

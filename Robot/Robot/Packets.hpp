@@ -31,7 +31,8 @@ namespace dl::robot::packet
       Position,
       (double, mPostionX),
       (double, mPostionY),
-      (double, mPostionZ)
+      (double, mPostionZ),
+      (std::string, mData)
       );
   };
 
