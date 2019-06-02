@@ -473,7 +473,7 @@ TARGETS
   Http
   Image
   Requests
-  Tcp
+  DanLibTcp
   Signal
   Serial
   String
