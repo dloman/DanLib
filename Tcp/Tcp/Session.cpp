@@ -1,6 +1,5 @@
 #include "Session.hpp"
 
-#include <iostream>
 #include <memory>
 
 using dl::tcp::Session;
@@ -105,7 +104,6 @@ void Session::OnRead(const asio::error_code& Error, const size_t BytesTransfered
         {
           if (auto pThis = pWeak.lock())
           {
-            std::cout << "bytes = \n " << Bytes << "\n\n"<<std::endl;
             mSignalOnRx(Bytes);
           }
         }));
