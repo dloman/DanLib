@@ -18,7 +18,7 @@ int main()
   while (true)
   {
     Client.Write(to_string(chrono::system_clock::now().time_since_epoch().count()));
-    //std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
   return 0;

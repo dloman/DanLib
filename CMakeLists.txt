@@ -224,98 +224,98 @@ target_link_libraries(
 # Http
 #------------------------------------------------------------------------------
 
-include_directories(Http)
+#include_directories(Http)
 
-add_library(
-  Http
-  Http/Http/Responce.cpp
-  Http/Http/Responce.hpp
-  Http/Http/Request.cpp
-  Http/Http/Request.hpp
-  Http/Http/Server.cpp
-  Http/Http/Server.hpp
-  )
+#add_library(
+#Http
+#Http/Http/Responce.cpp
+#Http/Http/Responce.hpp
+#Http/Http/Request.cpp
+#Http/Http/Request.hpp
+#Http/Http/Server.cpp
+#Http/Http/Server.hpp
+#)
 
-target_link_libraries(
-  Http
-  Tcp
-  String
-  )
+#target_link_libraries(
+#Http
+#Tcp
+#String
+#)
 
-add_executable(
-  HttpServerTest
-  Http/Utilities/HttpServer.cpp
-  )
+#add_executable(
+#HttpServerTest
+#Http/Utilities/HttpServer.cpp
+#)
 
-target_link_libraries(
-  HttpServerTest
-  String
-  Http
-  )
+#target_link_libraries(
+#HttpServerTest
+#String
+#Http
+#)
 
-add_executable(
-  HttpClientTest
-  Http/Utilities/HttpClient.cpp
-  )
+#add_executable(
+#HttpClientTest
+#Http/Utilities/HttpClient.cpp
+#)
 
-target_link_libraries(
-  HttpClientTest
-  Tcp
-  )
+#target_link_libraries(
+#HttpClientTest
+#Tcp
+#)
 
 #------------------------------------------------------------------------------
 # Websockets
 #------------------------------------------------------------------------------
-include_directories(Websockets)
+#include_directories(Websockets)
+#
+#add_library(
+#DanLibWebsockets
+#Websockets/Websockets/Server.cpp
+#Websockets/Websockets/Session.cpp
+##Websockets/Websockets/SslSession.cpp
+#Websockets/Websockets/Client.cpp
+#)
 
-add_library(
-  DanLibWebsockets
-  Websockets/Websockets/Server.cpp
-  Websockets/Websockets/Session.cpp
-  #Websockets/Websockets/SslSession.cpp
-  Websockets/Websockets/Client.cpp
-  )
+#target_link_libraries(
+#DanLibWebsockets
+#${Boost_SYSTEM_LIBRARY}
+#${CMAKE_THREAD_LIBS_INIT}
+#${OPENSSL_LIBRARIES}
+#)
 
-target_link_libraries(
-  DanLibWebsockets
-  ${Boost_SYSTEM_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${OPENSSL_LIBRARIES}
-  )
+#add_executable(
+#WebSocketServerTest
+#Websockets/Test/ServerTest.cpp
+#)
+#
+#target_link_libraries(
+#WebSocketServerTest
+#DanLibWebsockets
+#)
 
-add_executable(
-  WebSocketServerTest
-  Websockets/Test/ServerTest.cpp
-  )
+#add_executable(
+#WebSocketClientTest
+#Websockets/Test/ClientTest.cpp
+#)
+#
+#target_link_libraries(
+#WebSocketClientTest
+#DanLibWebsockets
+#${Boost_SYSTEM_LIBRARY}
+#${CMAKE_THREAD_LIBS_INIT}
+#)
 
-target_link_libraries(
-  WebSocketServerTest
-  DanLibWebsockets
-  )
-
-add_executable(
-  WebSocketClientTest
-  Websockets/Test/ClientTest.cpp
-  )
-
-target_link_libraries(
-  WebSocketClientTest
-  DanLibWebsockets
-  ${Boost_SYSTEM_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT}
-  )
-
-add_executable(
-  WebSocketMultiClientTest
-  Websockets/Test/MultiClientTest.cpp
-  )
-
-target_link_libraries(
-  WebSocketMultiClientTest
-  DanLibWebsockets
-  ${Boost_SYSTEM_LIBRARY}
-  ${CMAKE_THREAD_LIBS_INIT}
-  )
+#add_executable(
+#WebSocketMultiClientTest
+#Websockets/Test/MultiClientTest.cpp
+#)
+#
+#target_link_libraries(
+#WebSocketMultiClientTest
+#DanLibWebsockets
+#${Boost_SYSTEM_LIBRARY}
+#${CMAKE_THREAD_LIBS_INIT}
+#)
 
 #------------------------------------------------------------------------------
 # Serial
@@ -348,30 +348,30 @@ target_link_libraries(
 #------------------------------------------------------------------------------
 # Tcp
 #------------------------------------------------------------------------------
-include_directories(Requests)
+#include_directories(Requests)
 
-add_library(
-  Requests
-  Requests/Requests/Requests.cpp
-  Requests/Requests/Requests.hpp
-  )
+#add_library(
+#Requests
+#Requests/Requests/Requests.cpp
+#Requests/Requests/Requests.hpp
+#)
 
-target_link_libraries(
-  Requests
-  Http
-  Tcp
-  )
+#target_link_libraries(
+#Requests
+##Http
+#Tcp
+#)
 
-add_executable(
-  RequestsTest
-  Requests/Test/RequestTest.cpp
-  )
+#add_executable(
+#RequestsTest
+#Requests/Test/RequestTest.cpp
+#)
 
-target_link_libraries(
-  RequestsTest
-  Requests
-  Tcp
-  )
+#target_link_libraries(
+#RequestsTest
+#Requests
+#Tcp
+#)
 
 #------------------------------------------------------------------------------
 # Robot
@@ -469,10 +469,10 @@ WRITE_BASIC_PACKAGE_VERSION_FILE(
 
 install(
 TARGETS
-  DanLibWebsockets
-  Http
+#DanLibWebsockets
+  #Http
   Image
-  Requests
+  #Requests
   DanLibTcp
   Signal
   Serial
@@ -499,12 +499,12 @@ install(
     ${DanLib_DIRNAME_lib}
   )
 
-install(
-  FILES
-    Http/Http/Responce.hpp
-  DESTINATION
-    ${DanLib_DIRNAME_include}/Http
-  )
+#install(
+#FILES
+  #Http/Http/Responce.hpp
+  #DESTINATION
+  #${DanLib_DIRNAME_include}/Http
+  #)
 
 install(
   FILES
@@ -514,12 +514,12 @@ install(
     ${DanLib_DIRNAME_include}/Images
   )
 
-install(
-  FILES
-    Requests/Requests/Requests.hpp
-  DESTINATION
-    ${DanLib_DIRNAME_include}/Requests
-  )
+#install(
+#FILES
+#Requests/Requests/Requests.hpp
+#DESTINATION
+#${DanLib_DIRNAME_include}/Requests
+#)
 
 install(
   FILES
