@@ -156,12 +156,12 @@ target_link_libraries(
   )
 
 add_executable(
-  Server
+  DanLibServer
   Tcp/Test/ServerTest.cpp
   )
 
 target_link_libraries(
-  Server
+  DanLibServer
   DanLibTcp
   )
 

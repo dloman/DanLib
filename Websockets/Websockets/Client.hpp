@@ -127,7 +127,9 @@ namespace dl::ws
 
       std::string mWriteBuffer;
 
-      boost::asio::strand<boost::asio::io_context::executor_type> mStrand;
+      boost::asio::strand<boost::asio::io_context::executor_type> mWriteStrand;
+
+      boost::asio::strand<boost::asio::io_context::executor_type> mCallbackStrand;
 
       dl::Signal<void> mSignalConnection;
 

@@ -28,7 +28,7 @@ Client::Client(
   mpNullIoWork(std::make_unique<boost::asio::io_service::work> (mIoService)),
   mpNullCallbackWork(std::make_unique<boost::asio::io_service::work>(mCallbackService)),
   mBuffer(),
-  mStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
+  mWriteStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
   mIsSending(false)
 {
   StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
@@ -55,7 +55,8 @@ Client::Client(
   mpNullIoWork(std::make_unique<boost::asio::io_service::work> (mIoService)),
   mpNullCallbackWork(std::make_unique<boost::asio::io_service::work>(mCallbackService)),
   mBuffer(),
-  mStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
+  mWriteStrand(std::visit([](auto& Websocket) { return Websocket.get_executor(); }, mWebsocket)),
+  mCallbackStrand(mCallbackService),
   mIsSending(false)
 {
   StartWorkerThreads(mCallbackService, NumberOfCallbackThreads);
@@ -290,7 +291,7 @@ void Client::OnRead(
   {
     auto Bytes = boost::beast::buffers_to_string(mBuffer.data());
 
-    mCallbackService.post(
+    mCallbackStrand.post(
       [this, Bytes = std::move(Bytes)]
       {
         mSignalOnRx(Bytes);
@@ -302,7 +303,7 @@ void Client::OnRead(
     Error == boost::beast::websocket::error::closed ||
     Error == boost::asio::error::eof)
   {
-    mCallbackService.post(
+    mCallbackStrand.post(
       [this]
     {
       mSignalOnDisconnect();
@@ -312,7 +313,7 @@ void Client::OnRead(
   }
   else
   {
-    mCallbackService.post(
+    mCallbackStrand.post(
       [this, Error]
       {
         mSignalError(Error.message());
@@ -343,7 +344,7 @@ void Client::AsyncWrite()
       Websocket.async_write(
         boost::asio::buffer(mWriteBuffer),
         boost::asio::bind_executor(
-          mStrand,
+          mWriteStrand,
           [this]
           (const boost::system::error_code& Error, const size_t BytesTransfered)
           {
@@ -359,7 +360,7 @@ void Client::AsyncWrite()
             }
             else
             {
-              mCallbackService.post(
+              mCallbackStrand.post(
                 [=]
                 {
                   mSignalError("Write Error " + Error.message());
@@ -373,7 +374,7 @@ void Client::AsyncWrite()
       Websocket.async_write(
         boost::asio::buffer(mWriteBuffer),
         boost::asio::bind_executor(
-          mStrand,
+          mWriteStrand,
           [this]
           (const boost::system::error_code& Error, const size_t BytesTransfered)
           {
@@ -389,7 +390,7 @@ void Client::AsyncWrite()
             }
             else
             {
-              mCallbackService.post(
+              mCallbackStrand.post(
                 [=]
                 {
                   mSignalError("Write Error " + Error.message());
@@ -408,7 +409,7 @@ void Client::Write(std::string&& Bytes, dl::ws::DataType DataType)
 {
   mIoService.post(
     boost::asio::bind_executor(
-      mStrand,
+      mWriteStrand,
       [this, DataType, Bytes = std::move(Bytes)]
       {
         {
@@ -427,7 +428,7 @@ void Client::Write(const std::string& Bytes, dl::ws::DataType DataType)
 {
   mIoService.post(
     boost::asio::bind_executor(
-      mStrand,
+      mWriteStrand,
       [this, DataType, Bytes]
       {
         {

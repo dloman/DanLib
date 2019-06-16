@@ -78,7 +78,9 @@ namespace dl::tcp
 
       dl::Signal<const asio::error_code&, const std::string&> mSignalWriteError;
 
-      asio::io_service::strand mStrand;
+      asio::strand<asio::io_context::executor_type> mWriteStrand;
+
+      asio::strand<asio::io_context::executor_type> mCallbackStrand;
   };
 }
 

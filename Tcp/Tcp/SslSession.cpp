@@ -52,7 +52,8 @@ void SslSession::AsyncWrite()
     asio::async_write(
       mStream,
       asio::buffer(Message),
-      mStrand.wrap(
+      asio::bind_executor(
+        mWriteStrand,
         [this, pThis = shared_from_this(), Message]
         (const asio::error_code& Error, const size_t BytesTransfered)
         {
@@ -62,7 +63,8 @@ void SslSession::AsyncWrite()
           }
           else
           {
-            mCallbackService.post(
+            asio::bind_executor(
+              mCallbackStrand,
               [=]
               {
                 mSignalWriteError(Error, Message);
@@ -79,7 +81,8 @@ void SslSession::OnRead(const asio::error_code& Error, const size_t BytesTransfe
   if (!Error)
   {
     std::string Bytes(mData.data(), BytesTransfered);
-    mCallbackService.post(
+    asio::bind_executor(
+      mCallbackStrand,
       [this, pWeak = weak_from_this(), Bytes = std::move(Bytes)]
       {
         if (auto pThis = pWeak.lock())
@@ -98,12 +101,14 @@ void SslSession::OnRead(const asio::error_code& Error, const size_t BytesTransfe
   else if (
     (Error == asio::error::eof) || (Error == asio::error::connection_reset))
   {
-    mCallbackService.post(
+    asio::bind_executor(
+      mCallbackStrand,
       [this, pThis = shared_from_this()] { mSignalOnDisconnect(); });
   }
   else
   {
-    mCallbackService.post(
+    asio::bind_executor(
+      mCallbackStrand,
       [this, Error, pThis = shared_from_this()] { mSignalReadError(Error); });
   }
 }
