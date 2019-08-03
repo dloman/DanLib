@@ -33,9 +33,12 @@ void Session::Start()
 {
   mSocket.async_read_some(
     asio::buffer(mData, mMaxLength),
-    [this] (const asio::error_code& Error, const size_t BytesTransfered)
+    [this, pWeak = weak_from_this()] (const asio::error_code& Error, const size_t BytesTransfered)
     {
-      OnRead(Error, BytesTransfered);
+      if (auto pThis = pWeak.lock())
+      {
+        OnRead(Error, BytesTransfered);
+      }
     });
 }
 
