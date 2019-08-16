@@ -3,12 +3,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 #fixes wierd library shortname isssue
 CMAKE_POLICY( SET CMP0060 NEW )
 
-SET(CMAKE_C_COMPILER /usr/local/bin/gcc)
-SET(CMAKE_CXX_COMPILER /usr/local/bin/g++)
-
 PROJECT(DanLib)
 set(MODULE_NAME DanLib)
-add_definitions(-DMODULE_NAME=\"DanLib\")
 
 ADD_DEFINITIONS(-Wall)
 ADD_DEFINITIONS(-fPIC)
@@ -34,16 +30,16 @@ find_package(Threads)
 
 #TODO move to boost asio vs standalone
 
-find_package(asio REQUIRED)
+#find_package(asio REQUIRED)
 
-include_directories(${asio_INCLUDE_DIR})
+#include_directories(${asio_INCLUDE_DIR})
 
-find_package(Boost REQUIRED COMPONENTS system)
-include_directories(${Boost_INCLUDE_DIR})
+#find_package(Boost REQUIRED COMPONENTS system)
+#include_directories(${Boost_INCLUDE_DIR})
 
-find_package(OpenSSL REQUIRED)
+#find_package(OpenSSL REQUIRED)
 
-include_directories(${OPENSSL_INCLUDE_DIR})
+#include_directories(${OPENSSL_INCLUDE_DIR})
 
 set(CMAKE_DEBUG_POSTFIX d)
 
@@ -262,7 +258,6 @@ target_link_libraries(
 #HttpClientTest
 #Tcp
 #)
-
 #------------------------------------------------------------------------------
 # Websockets
 #------------------------------------------------------------------------------
